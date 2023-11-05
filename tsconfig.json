@@ -1,0 +1,19 @@
+{
+
+  "compilerOptions": {
+    "composite": true,
+     "module": "commonjs",
+     "sourceMap": true,
+    "baseUrl": ".",
+    "types": ["node"],
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    
+    "target": "es2016",                                  
+    "esModuleInterop": true,                             
+    "forceConsistentCasingInFileNames": true,            
+    "strict": true,                                      
+    "skipLibCheck": true                                 
+  }
+}
