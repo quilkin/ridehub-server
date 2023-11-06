@@ -15,5 +15,12 @@
     "forceConsistentCasingInFileNames": true,            
     "strict": true,                                      
     "skipLibCheck": true                                 
-  }
+  },
+  "references": [
+    { 
+        "path": "../ridehub-common",
+        // add 'prepend' if you want to include the referenced project in your output file
+        //"prepend": true, 
+    }
+]
 }

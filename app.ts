@@ -1,9 +1,10 @@
 const express = require('express')
 const bodyParser = require('body-parser');
 const cors = require('cors');
-var dbconnection = require('./src/dbconn')
-import { Ride } from './src/classes/ride'
+var dbconnection = require('./src/dbconn');
 import { Request } from "express"
+import { Ride } from '../ridehub-common'
+import { apiMethods } from '../ridehub-common'
 
 const app = express ();
 const port = process.env.PORT || 3000;
@@ -15,21 +16,19 @@ app.use(bodyParser.json());
 
 let books : any[] = [];
 
-app.listen(port, () => {
+  app.listen(port, () => {
     console.log("Server Listening on PORT:", port);
   });
 
-  function getRidesForDate(request: Request<{ date: string}>, response: { json: (arg0: any[]) => void; }) {
+  function getRidesForDate(request: Request<{ date: string}>, response: { json: (arg0: Ride[]) => void; }) {
     const date : number = parseInt(request.body.data);
+    const sql = `SELECT * FROM rides where date > ${date-1} and date <= ${date+60} order by date asc`;
 
-    let sql = `SELECT * FROM rides where date > ${date-1} and date <= ${date+60} order by date asc`;
-    //console.log(date + ' sql: ' + sql);
-    dbconnection.query(sql,function (error: null, results: any[],fields: any)
+    dbconnection.query(sql,function (error: { code: any; }, results: Ride[])
     {
       if (error != null) {
         throw error;
       }
-      //console.log(`found ${results.length} rides`)
       response.json(results);
     });
   }
@@ -53,43 +52,62 @@ app.listen(port, () => {
 	        query = `SELECT hasGPX,id,dest,description,distance,climbing,ownername FROM routes`;
 	        break;
 	  }
-    //console.log(which + ' query: ' + query);
-    dbconnection.query(query,function (error: null, results: any[],fields: any)
+    dbconnection.query(query,function (error: { code: any; }, results: any[],fields: any)
     {
       if (error != null) {
         throw error;
       }
-      //console.log(`found ${results.length} routes`)
       response.json(results);
     });
   }
 
-  app.post("/GetRidesForDate", (request: any, response: { json: (arg0: any[]) => void; }) =>
+    //  get comma-separated list of participants for each displayed ride
+  function getParticipants(request: any, response: { json: (arg0: string[]) => void; }) {
+    const rideIDs : number[] = request.body.data;
+    const participants = [] as string[];
+    
+    for (let index = 0; index < rideIDs.length; index++) {
+	    let pp = ",";
+	    let query = `SELECT rider FROM Participants where rideID = '${rideIDs[index]}' `;
+      dbconnection.query(query,function (error: { code: any; } , results: any[])
+      {
+        if (error != null) {
+          throw error;
+        }
+	        for (let row = 0; row < results.length; row++) {
+	            pp = pp + results[row].rider + ",";
+	      }
+
+        participants[index] = pp;
+        if (index >= rideIDs.length-1) 
+        {
+          // got them all now
+          response.json(participants);
+        }
+      });
+    }
+  }
+
+    
+
+  app.post("/" + apiMethods.getRides, (request: any, response: { json: (arg0: Ride[]) => void; }) =>
   {
-    console.log('getRidesForDate '  + request.body.data);
+    //console.log('getRidesForDate '  + request.body.data);
     getRidesForDate(request,response);
   })
 
-  app.post("/GetRoutes", (request: any, response: { json: (arg0: any[]) => void; }) =>
+  app.post("/" + apiMethods.getRoutes, (request: any, response: { json: (arg0: any[]) => void; }) =>
   {
-    console.log('getRoutes '  + request.body.data);
+    //console.log('getRoutes '  + request.body.data);
     getRoutes(request,response);
   })
 
-// app.get("/getRidesForDate/:date", (request: Request<{ date: string}>, response: { json: (arg0: Ride[]) => void; }) => {
-//   const date : number = parseInt(request.params.date);
+  app.post("/" + apiMethods.getPpts, (request: any, response: { json: (arg0: string[]) => void; }) =>
+  {
+    //console.log('get participants for rides '  + request.body.data);
+    getParticipants(request,response);
+  })
 
-//   var sql = `SELECT * FROM rides where date > ${date-1} and date <= ${date+60} order by date asc`;
-//   dbconnection.query(sql,date,function (error: null, results: Ride[],fields: any)
-//   {
-//     if (error != null) {
-//       throw error;
-//     }
-//     console.log(`found ${results.length} rides`)
-//     response.json(results);
-//   });
-  
-// });
 
 app.get('/book/:isbn', (req: { params: { isbn: any; }; }, res: { json: (arg0: any) => void; status: (arg0: number) => { (): any; new(): any; send: { (arg0: string): void; new(): any; }; }; }) => {
   // Reading isbn from the URL
@@ -118,3 +136,5 @@ app.post('/book', (req: { body: any; }, res: { send: (arg0: string) => void; }) 
 
     res.send('Book is added to the database');
 });
+
+export { apiMethods };
