@@ -1,15 +1,21 @@
+
+
 var mysql = require('mysql');
+require('dotenv').config();
 // Initialize pool
 var pool     =    mysql.createPool({
     connectionLimit : 10,
-    host: "mysql01.hostinguk.net",
-    user: "trurocc_dev",
-    password: "yoVl94@6",
-    database: "trurocc_ridehub_backup_aug2023",
+    host: process.env.host,
+    user: process.env.user,
+    password: process.env.password,
+    database: process.env.database,
     debug    :  false
 });    
+
+
 // Attempt to catch disconnects 
 pool.on('connection', function (connection: { on: (arg0: string, arg1: { (err: any): void; (err: any): void; }) => void; }) {
+
     console.log('DB Connection established');
   
     connection.on('error', function (err: { code: any; }) {
@@ -21,21 +27,5 @@ pool.on('connection', function (connection: { on: (arg0: string, arg1: { (err: a
   
   });
   module.exports = pool;
-  // exports.executeQuery=function(query: string,callback: (arg0: null, arg1: { rows: any; }) => void){
-  //   pool.getConnection(function(err: any,connection: { release: () => void; query: (arg0: string, arg1: (err: any, rows: any) => void) => void; on: (arg0: string, arg1: (err: any) => void) => void; }){
-  //       if (err) {
-  //         connection.release();
-  //         throw err;
-  //       }   
-  //       connection.query(query,function(err: any,rows: any){
-  //           connection.release();
-  //           if(!err) {
-  //               callback(null, {rows: rows});
-  //           }           
-  //       });
-  //       connection.on('error', function(err: any) {      
-  //             throw err;
-  //             return;     
-  //       });
-  //   });
+  
 //}

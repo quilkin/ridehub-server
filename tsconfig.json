@@ -9,7 +9,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    
+    "noEmit": true,
     "target": "es2016",                                  
     "esModuleInterop": true,                             
     "forceConsistentCasingInFileNames": true,            

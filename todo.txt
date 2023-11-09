@@ -1,0 +1,2 @@
+store logins in db log
+error handling for all apis

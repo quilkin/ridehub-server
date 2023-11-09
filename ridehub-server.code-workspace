@@ -3,6 +3,9 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"settings": {
+		"workbench.colorTheme": "Tomorrow Night Blue"
+	}
 	
 }
