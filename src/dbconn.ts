@@ -27,5 +27,21 @@ pool.on('connection', function (connection: { on: (arg0: string, arg1: { (err: a
   
   });
   module.exports = pool;
-  
+  // exports.executeQuery=function(query: string,callback: (arg0: null, arg1: { rows: any; }) => void){
+  //   pool.getConnection(function(err: any,connection: { release: () => void; query: (arg0: string, arg1: (err: any, rows: any) => void) => void; on: (arg0: string, arg1: (err: any) => void) => void; }){
+  //       if (err) {
+  //         connection.release();
+  //         throw err;
+  //       }   
+  //       connection.query(query,function(err: any,rows: any){
+  //           connection.release();
+  //           if(!err) {
+  //               callback(null, {rows: rows});
+  //           }           
+  //       });
+  //       connection.on('error', function(err: any) {      
+  //             throw err;
+  //             return;     
+  //       });
+  //   });
 //}

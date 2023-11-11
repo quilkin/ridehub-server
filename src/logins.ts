@@ -16,30 +16,40 @@ async function getHash(text : string)  {
     return hashHex.toUpperCase();
   }
 
-  export async function logIn(request: { body: { data: User; }; }, response: { json: (arg0: User) => void; }) {
+  export async function logIn(request: { body: { data: User; }; }, response: { json: (arg0: User) => void; }, next) {
     let user : User = request.body.data;
     const hash : string = await getHash(user.pw);
     // can login with either username or email
     let query: string = `SELECT id, name, pw, email, role, units, climbs, notifications FROM logins where name = '${user.name}' or email = '${user.name}'`;
+
     dbconnection.query(query,function (error: { code: any; },  results: User[])
     {
       if (error != null) {
-        throw error;
+        next(error);
       }
       const checkedUser = results[0];
-         // can login with either username or email
+        // can login with either username or email
       if (checkedUser.name === user.name || checkedUser.email === user.name) {
         if (checkedUser.pw === hash) {
-         
+        
           user = checkedUser;
-           // don't want to return the password
+          // don't want to return the password
           user.pw = '';
-
         }
       }
       console.log('got user: ' + user.id + ' email: ' + user.email)
       response.json(user);
     });
-    return null;
   }
     
+  export function getLogins(request: any, response: { json: (arg0: User[]) => void; }, next: (arg0: { code: any; }) => void) {
+      let sql = "SELECT id, name, email, notifications FROM logins";
+      dbconnection.query(sql,function (error: { code: any; }, results: User[])
+      {
+        if (error != null) {
+          next(error);
+        }
+        else
+            response.json(results);
+      });
+  }

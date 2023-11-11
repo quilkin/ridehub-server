@@ -1,7 +1,7 @@
 var dbconnection = require('./dbconn');
 import { Route} from '../../ridehub-common'
 
-export function getRoutes(request: { body: { data: number; }; }, response: { json: (arg0: Route[]) => void; }) {
+export function getRoutes(request: { body: { data: number; }; }, response: { json: (arg0: Route[]) => void; }, next) {
     const which : number = request.body.data;
 
     let query: string;
@@ -15,18 +15,20 @@ export function getRoutes(request: { body: { data: number; }; }, response: { jso
     dbconnection.query(query,function (error: { code: any; }, results: any[])
     {
       if (error != null) {
-        throw error;
+        next(error);
       }
-      response.json(results);
+      else
+        response.json(results);
     });
   }
-  export function getGpx(request: { body: { data: number; }; }, response: { json: (arg0: string) => void; }) {
+  export function getGpx(request: { body: { data: number; }; }, response: { json: (arg0: string) => void; }, next) {
     const routeId : number = request.body.data;
     const query = `SELECT route FROM routes where id=${routeId}`;
     dbconnection.query(query,function (error: { code: any; }, results: string[])
     {
       if (error != null) {
-        throw error;
+        next(error);
+        return;
       }
       if (results.length == 0) {
          // Sending 404 when not found something is a good practice
