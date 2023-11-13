@@ -2,6 +2,7 @@ var dbconnection = require('./dbconn');
 
 import { Ride, TimesDates, User } from '../../ridehub-common'
 import { SendNotificationEmails } from './email'
+import {  logUser } from '@/utils/logger';
 
 function GetRidOfApostrophes(data : string): string
 {
@@ -51,11 +52,14 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
 
       dbconnection.query(sql,function (error: { code: any; }, results: { insertId: { toString: () => string; }; })
       {
+       
         if (error != null) {
           next(error);
           return;
         }
-        response.json(results.insertId.toString());
+        const rideID = results.insertId;
+        logUser(`Ride ${rideID} saved`);
+        response.json(rideID.toString());
     
 
       })
@@ -75,12 +79,11 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
 
     dbconnection.query(sql,function (error: { code: any; }, results: string)
     {
-      if (error != null) {
+      logUser(`Ride ${rideID} deleted`);
+      if (error != null) 
         next(error);
-
-      }
       else
-       response.json(results);
+       response.json('OK');
     });
   }
 

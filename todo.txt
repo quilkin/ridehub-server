@@ -1,2 +1,3 @@
-store logins in db log
-error handling for all apis
+improve log files - daily / weekly?
+
+tcx conversion

@@ -63,7 +63,7 @@ export function SendNotificationEmails(ride: Ride, next) {
             return;
         }
         else {
-            console.log('Email sent: ' + info.response);
+         //   console.log('Email sent: ' + info.response);
             }
     }); 
  }

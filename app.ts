@@ -2,11 +2,14 @@ const express = require('express')
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override')
 const cors = require('cors');
+//const errorLog = require('./src/utils/logger').errorlog;
+//import {errorLog } from './src/utils/logger'
 import { apiMethods, User, Ride,  Route, Participant } from '../ridehub-common'
 import { logIn, getLogins } from "@/logins";
-import { getRoutes, getGpx } from "@/routes";
+import { getRoutes, getGpx, saveRoute } from "@/routes";
 import { getRidesForDate, saveRide, editRide, deleteRide } from "@/rides";
 import { getParticipants, saveParticipant, leaveParticipant } from "@/participants";
+import { createLogFiles, logError, logUser } from '@/utils/logger';
 
 const app = express ();
 const port = process.env.PORT || 3000;
@@ -34,12 +37,44 @@ app.use(methodOverride());
   app.post("/" + apiMethods.saveRide,  saveRide)
   app.post("/" + apiMethods.editRide,  editRide)
   app.post("/" + apiMethods.deleteRide,deleteRide)
+  app.post("/" + apiMethods.saveRoute, saveRoute)
+  //app.post("/" + apiMethods.tcx2gpx,   Tcx2Gpx)
 
   app.use((err, req, res, next) => {
     
     console.error(err.message);
-    //todo: also add to log file
-       
+    logError(err.message);
+
     res.statusMessage = err.message;
     res.status(500).send(err.message)
   })
+
+  createLogFiles(__dirname);
+  // var fs = require('fs');
+  // var util = require('util');
+
+  // var logFile = fs.createWriteStream(__dirname +'/error.log', {flags : 'a'});
+  // var userFile = fs.createWriteStream(__dirname + '/users.log', {flags : 'a'});
+
+// function logError(mess : string) { 
+//   try {
+//     const time = new Date().toLocaleTimeString();
+//     const date = new Date().toLocaleDateString();
+//     const message = util.format('%s %s: %s',time,date,mess)+ '\n'; 
+//     log_file.write(message);
+//   }
+//   catch (e){
+//   }
+// };
+// function logUser(mess: string) { //
+//   try {
+//     const time = new Date().toLocaleTimeString();
+//     const date = new Date().toLocaleDateString();
+//     const message = util.format('%s %s: %s',time,date,mess)+ '\n'; 
+//     //const message = `${Date.now.toString()}: d\n`;
+//     user_file.write(message);
+//   }
+//   catch(e) {
+    
+//   }
+// };

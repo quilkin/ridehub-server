@@ -2,7 +2,7 @@
 
   "compilerOptions": {
     "composite": true,
-     "module": "commonjs",
+    // "module": "commonjs",
      "sourceMap": true,
     "baseUrl": ".",
     "types": ["node"],
@@ -10,7 +10,11 @@
       "@/*": ["./src/*"]
     },
     "noEmit": true,
-    "target": "es2016",                                  
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2020"],
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "target": "ES2020",                               
     "esModuleInterop": true,                             
     "forceConsistentCasingInFileNames": true,            
     "strict": true,                                      

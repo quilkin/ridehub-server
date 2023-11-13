@@ -16,7 +16,7 @@ var pool     =    mysql.createPool({
 // Attempt to catch disconnects 
 pool.on('connection', function (connection: { on: (arg0: string, arg1: { (err: any): void; (err: any): void; }) => void; }) {
 
-    console.log('DB Connection established');
+    //console.log('DB Connection established');
   
     connection.on('error', function (err: { code: any; }) {
       console.error(new Date(), 'MySQL error', err.code);

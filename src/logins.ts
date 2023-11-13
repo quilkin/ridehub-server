@@ -1,6 +1,7 @@
 var dbconnection = require('./dbconn');
 
 import { User } from '../../ridehub-common'
+import {  logUser } from '@/utils/logger';
 
 async function getHash(text : string)  {
     if (text === null || text === undefined || text === "") {
@@ -37,7 +38,8 @@ async function getHash(text : string)  {
           user.pw = '';
         }
       }
-      console.log('got user: ' + user.id + ' email: ' + user.email)
+      logUser('User login: ' + user.id + 'name ' + user.name + ' email: ' + user.email);
+      
       response.json(user);
     });
   }
