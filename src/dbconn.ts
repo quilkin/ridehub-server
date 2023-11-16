@@ -1,9 +1,20 @@
+//var mysql = require('mysql');
+
+import mysql  from 'mysql';
+import * as dotenv from "dotenv";
 
 
-var mysql = require('mysql');
-require('dotenv').config();
-// Initialize pool
-var pool     =    mysql.createPool({
+export var dbconnection : mysql.Pool;
+
+// export function dbConnection() : mysql.Pool{
+//   console.log('host: ' + process.env.host);
+//   return dbconnection;
+// }
+export function createPool(configPath : string) : mysql.Pool{
+  //const configPath =  __dirname+'../.env'
+  dotenv.config({ path: configPath });
+  console.log('host: ' + process.env.host);
+  dbconnection     =    mysql.createPool({
     connectionLimit : 10,
     host: process.env.host,
     user: process.env.user,
@@ -12,11 +23,10 @@ var pool     =    mysql.createPool({
     debug    :  false
 });    
 
-
 // Attempt to catch disconnects 
-pool.on('connection', function (connection: { on: (arg0: string, arg1: { (err: any): void; (err: any): void; }) => void; }) {
+dbconnection.on('connection', function (connection: { on: (arg0: string, arg1: { (err: any): void; (err: any): void; }) => void; }) {
 
-    //console.log('DB Connection established');
+    console.log('DB Connection established');
   
     connection.on('error', function (err: { code: any; }) {
       console.error(new Date(), 'MySQL error', err.code);
@@ -26,7 +36,10 @@ pool.on('connection', function (connection: { on: (arg0: string, arg1: { (err: a
     });
   
   });
-  module.exports = pool;
+  return dbconnection;
+}
+
+
   // exports.executeQuery=function(query: string,callback: (arg0: null, arg1: { rows: any; }) => void){
   //   pool.getConnection(function(err: any,connection: { release: () => void; query: (arg0: string, arg1: (err: any, rows: any) => void) => void; on: (arg0: string, arg1: (err: any) => void) => void; }){
   //       if (err) {

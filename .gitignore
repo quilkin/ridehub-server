@@ -27,3 +27,6 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+*.js
+*.js.map
+*.d.ts

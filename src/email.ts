@@ -1,25 +1,31 @@
-import { Ride, TimesDates } from '../../ridehub-common'
-var dbconnection = require('./dbconn');
+import { Ride } from './common/ride.js'
+import { User } from './common/user.js'
+import { TimesDates } from './common/timesdates.js'
+import { dbconnection}  from './dbconn.js'  ;
+import  nodemailer from 'nodemailer';
+import { getHash } from './utils/hash.js'
+import { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
 
-export function SendNotificationEmails(ride: Ride, next) {
+var transporter: nodemailer.Transporter<SentMessageInfo>;
 
-
-    var nodemailer = require('nodemailer');
-    require('dotenv').config();
-
-    // todo.....
-    // create and send an email about the new ride to all users, unless they opted out
-
-    var transporter = nodemailer.createTransport({
+function createTransporter() {
+    transporter = nodemailer.createTransport({
         host: process.env.emailServer,
         secure: true,
         auth: {
-        user: process.env.emailUserName,
-        pass: process.env.emailPassword
+            user: process.env.emailUserName,
+            pass: process.env.emailPassword
         }
     });
+}
+
+/***
+ * create and send an email about the new ride to all users, unless they opted out
+ */
+export function SendNotificationEmails(ride: Ride, next: (arg0: { code: any; }) => void) {
+
+    createTransporter();
     
-    //let time: string = Logdata.JSDateToDateTime(ride.Date).ToLongDateString();
     let time: string = TimesDates.StrFromIntDays(ride.date);
     let body: string = `A new ride has been posted! :)\n\r    Date/Time: ${time}.\n    Decription: ${ride.description}\n\r`;
     body += "Please visit https://ridehub.truro.cc for details\n\r\n\r";
@@ -47,15 +53,6 @@ export function SendNotificationEmails(ride: Ride, next) {
         }
         eMail.bcc = results;
 
-    // transporter.sendMail(eMail, function(error: any, info: { response: string; }){
-    // if (error != null) {
-    //     next(error);
-    //     return;
-    // }
-    // else {
-    //     console.log('Email sent: ' + info.response);
-    //     }
-    // }); 
     })
     transporter.sendMail(eMail, function(error: any, info: { response: string; }){
         if (error != null) {
@@ -65,5 +62,52 @@ export function SendNotificationEmails(ride: Ride, next) {
         else {
          //   console.log('Email sent: ' + info.response);
             }
+    }); 
+ }
+
+ 
+export async function SendRegistationEmail(user: User, next: (arg0: { code: any; }) => void) {
+
+   createTransporter();
+   
+   user.code = await getHash(user.name + user.name);
+   const urlStr = `${process.env.serviceURL}?user=${user.name}&regcode=${user.code}`;
+   const body = `Please click ${urlStr}  to complete your registration\n\r\n\rFor security, this link will expire in 15 minutes!`;
+   
+   var eMail = {
+    from: "rides@truro.cc",
+    to: user.email,
+    subject: "TCC rides signup",
+    text: body
+   }
+
+   transporter.sendMail(eMail, function(error: any, info: { response: string; }){
+       if (error != null) {
+           next(error);
+           return;
+       }
+   }); 
+}
+
+export async function SendPasswordResetEmail(username: string, email: string, next: (arg0: { code: any; }) => void) {
+
+    createTransporter();
+    
+    user.code = await getHash(user.name + user.name);
+    const urlStr = `${process.env.serviceURL}?pwuser=${user.name}&regcode=${user.code}`;
+    const body = `Please click ${urlStr} to reset your password or other details\n\r\n\rFor security, this link will expire in 15 minutes!`;
+    
+    var eMail = {
+     from: "rides@truro.cc",
+     to: user.email,
+     subject: "TCC RideHub forgotten password",
+     text: body
+    }
+ 
+    transporter.sendMail(eMail, function(error: any, info: { response: string; }){
+        if (error != null) {
+            next(error);
+            return;
+        }
     }); 
  }

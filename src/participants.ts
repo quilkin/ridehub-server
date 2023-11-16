@@ -1,10 +1,10 @@
-var dbconnection = require('./dbconn');
+import { dbconnection } from './dbconn.js'  ;
 import { Request } from "express"
-import { Participant } from '../../ridehub-common'
-import {  logUser } from '@/utils/logger';
+import { Participant } from './common/participant.js'
+import {  logUser } from './utils/logger.js';
 
     //  get comma-separated list of participants for each displayed ride
-    export function getParticipants(request: { body: { data: number[]; }; }, response: { json: (arg0: string[]) => void; }, next) {
+    export function getParticipants(request: { body: { data: number[]; }; }, response: { json: (arg0: string[]) => void; }, next: (arg0: { code: any; }) => void) {
         const rideIDs : number[] = request.body.data;
         const participants = [] as string[];
         for (let ride = 0; ride < rideIDs.length; ride++) {
@@ -27,7 +27,7 @@ import {  logUser } from '@/utils/logger';
         });
       }
    
-      export function saveParticipant(request: { body: { data: Participant; }; }, response: { json: (arg0: string) => void; }, next) {
+      export function saveParticipant(request: { body: { data: Participant; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
 	    let result: string = "";
         const pp : Participant = request.body.data;
         let query: string = `SELECT rider FROM Participants where rideID = '${pp.rideID}' and rider = '${pp.rider}'`;
@@ -57,7 +57,7 @@ import {  logUser } from '@/utils/logger';
 
 	}
 
-      export function leaveParticipant(request: { body: { data: Participant; }; }, response: { json: (arg0: string) => void; }, next) {
+      export function leaveParticipant(request: { body: { data: Participant; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
         let result: string = "";
         const pp : Participant = request.body.data;
         let query: string = `SELECT rider FROM Participants where rideID = '${pp.rideID}' and rider = '${pp.rider}'`;

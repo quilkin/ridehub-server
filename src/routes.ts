@@ -1,7 +1,5 @@
-var dbconnection = require('./dbconn');
-import { Route} from '../../ridehub-common'
-
-
+import { dbconnection } from './dbconn.js'  ;
+import { Route} from './common/route.js'
 
 export function getRoutes(request: { body: { data: number; }; }, response: { json: (arg0: Route[]) => void; }, next: (arg0: { code: any; }) => void) {
     const which : number = request.body.data;
@@ -131,5 +129,23 @@ export function getRoutes(request: { body: { data: number; }; }, response: { jso
       // catch (error : any) {
       //   next(error);
       // }
+    }
+
+    export function updateRoute(request: { body: { data: Route; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+
+        const route = request.body.data;
+        route.dest = GetRidOfApostrophes(route.dest);
+        route.description = GetRidOfApostrophes(route.description);
+
+        const sql = `update routes set distance = ${route.distance}, climbing = ${route.climbing}, dest = '${route.dest}' where id = ${route.id}`
+        dbconnection.query(sql,function (error: { code: any; }, results: { insertId: string; })
+        {
+          if (error != null) {
+            next(error);
+            return;
+          }
+          response.json("OK");
+        })
+
     }
 

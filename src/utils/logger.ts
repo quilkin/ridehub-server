@@ -1,9 +1,12 @@
-var fs = require('fs');
-var util = require('util');
+import fs from "fs";
+import util from "util";
 var log_file: { write: (arg0: string) => void; };
 var user_file: { write: (arg0: string) => void; };
 
 export function createLogFiles(path : string) {
+  if (!fs.existsSync(path +'/logs')){
+    fs.mkdirSync(path +'/logs');
+  }
   log_file = fs.createWriteStream(path +'/logs/error.log', {flags : 'a'});
   user_file = fs.createWriteStream(path + '/logs/users.log', {flags : 'a'});
 }
