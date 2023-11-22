@@ -29,14 +29,6 @@ export class User {
     public messageTime: Date = new Date();
     public error : string = '';
 
-    // constructor(obj? : iUser) {
-    //     this.climbs = obj?.climbs ?? 0;
-    //     this.email  = obj?.email ?? '';
-    //     this.id     = obj?.id ?? 0;
-    //     this.name   = obj?.name ?? '';
-    //     this.pw     = obj?.pw ?? '';
-    //     this.notifications = obj?.notifications ?? 1;
-    // }
 
 constructor(name:string, pw: string, email?: string, notify?: number, error?: string) {
     this.name = name;

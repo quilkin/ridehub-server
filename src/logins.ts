@@ -1,28 +1,9 @@
 import { createPool, dbconnection } from './dbconn.js'  ;
-//import crypto from 'crypto';
-
 import { User } from './common/user.js'
 import { logUser } from './utils/logger.js';
 import { getHash } from './utils/hash.js'
-import { SendRegistationEmail, SendPasswordResetEmail} from './email.js'
+import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from './email.js'
 
-
-
-//let dbconnection = createPool();
-// async function getHash(text : string)  {
-//     if (text === null || text === undefined || text === "") {
-// 	    return "";
-// 	  }
-//     // see https://stackoverflow.com/questions/18338890
-//     const msgBuffer = new TextEncoder().encode(text);                    
-//     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-//     //const hashBuffer = await crypto.createHmac('sha256', '').update(msgBuffer).digest('hex');
-//     // convert ArrayBuffer to Array
-//     const hashArray = Array.from(new Uint8Array(hashBuffer));
-//     // convert bytes to hex string                  
-//     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-//     return hashHex.toUpperCase();
-//   }
 
   export async function logIn(request: { body: { data: User; }; }, response: { json: (arg0: User) => void; }, next: (arg0: { code: any; }) => void) {
     let user : User = request.body.data;
@@ -148,7 +129,7 @@ import { SendRegistationEmail, SendPasswordResetEmail} from './email.js'
     {
       if (error != null) {    next(error); return;   }
     });
-    logUser('User changed account: ' + user.id + 'name ' + user.name );
+    logUser('User changed account: ' + user.id );
     response.json("OK");
   }
   
@@ -159,14 +140,15 @@ import { SendRegistationEmail, SendPasswordResetEmail} from './email.js'
       response.json("Password must be between 4 and 10 characters");
       return;
     }
-    const hash : string = await getHash(user.pw);
+    let hash : string = await getHash(user.pw);
     let sql =  "SELECT Id, name, pw, email FROM logins";
-    dbconnection.query(sql,function (error: { code: any; }, users: User[])
+    dbconnection.query(sql,async function (error: { code: any; }, users: User[])
     {
       if (error != null) {    next(error);  return;   }
-      users.forEach ((existingUuser) => {
-        const name = existingUuser.name.trim();
-        const email = existingUuser.email.trim();
+      //users.forEach ((existingUuser) => {
+      for (const existingUser of users) {
+        const name = existingUser.name.trim();
+        const email = existingUser.email.trim();
         if (name.toLowerCase() === user.name.toLowerCase()) {
           response.json("Sorry, this username has already been taken");
           return;
@@ -175,32 +157,40 @@ import { SendRegistationEmail, SendPasswordResetEmail} from './email.js'
           response.json("Sorry, only one login allowed per email address");
           return;
         }
-      });
-    });
-    await SendRegistationEmail(user,next);
+      };
+      hash = await getHash(user.name + user.name);
 
-    sql =  `insert into logins (name, pw, email,role,messagetime,units,climbs,notifications) values`;
-    sql += ` ('${user.name}','${user.pw}','${user.email}',${user.role},'${user.messageTime}','${user.units}',${user.climbs},${user.notifications})`;
-    dbconnection.query(sql,function (error: { code: any; }, results: User[])
-    {
-      if (error != null)
-       {    
-        next(error);    
-        return;
-      }
-      let reply = "Thank you, please wait for an email and click link to complete registration."
-      reply +=  "Please check that rides@truro.cc is in your contact list and not treated as junk mail"
-      response.json(reply);
-    });
-
+      const message = CreateRegistationEmail(user,hash,next);
+      message.transport.sendMail(message.email, function(error: any, info: any){
+        if (error != null) {
+            console.log("registration email failed");
+            next(error);
+            return;
+        }
+        console.log("email sent ok");
+        const now = new Date();
+        var pDateSeconds = now.valueOf()/1000;
+        sql =  `insert into logins (name, pw, email,role,messagetime,units,climbs,notifications) values`;
+        sql += ` ('${user.name}','${hash}','${user.email}',0,FROM_UNIXTIME('${pDateSeconds}'),'k',1,1)`;
+        dbconnection.query(sql,function (error: { code: any; }, results: User[])
+        {
+          if (error != null)
+          {    
+            next(error);    
+            return;
+          }
+          let reply = "Thank you, please wait for an email and click link to complete registration."
+          reply +=  "Please check that rides@truro.cc is in your contact list and not treated as junk mail"
+          response.json(reply);
+        }); // query 2
+      }); // sendmail
+    }); // query 1
   }
 
   export async function forgotPW(request: { body: { data: string; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
 
     const email = request.body.data;
-    let reply = "OK, now please wait for an email and click the link to set a new password.\n\r";
-        reply += "-------------------------------------------------------------------------\n\r";
-        reply += "Please check that rides@truro.cc is in your contact list and not treated as junk mail";
+    
     let username = "";
     let sql = `SELECT Id, name, email FROM logins where email = '${email}'`
     dbconnection.query(sql,async function (error: { code: any; }, users: User[])
@@ -219,10 +209,30 @@ import { SendRegistationEmail, SendPasswordResetEmail} from './email.js'
         return;
       }
       username = users[0].name.trim();
-      await SendPasswordResetEmail(username,email,next);
-       // save the time this message was sent
-      sql = `update logins set messagetime = '${0}' where email = '${email}'`
-
-    });
-
+      const now = new Date();
+      
+      const code = await getHash(username + username);
+      const message =  CreatePasswordResetEmail(username,email,code,next);
+      message.transport.sendMail(message.email, function(error: any, info: any){
+        if (error != null) {
+            console.log("password reset email failed");
+            next(error);
+            return;
+        }
+        // save the time this message was sent
+        var pDateSeconds = now.valueOf()/1000;
+        sql = `update logins set messagetime = FROM_UNIXTIME('${pDateSeconds}') where email = '${email}'`
+        dbconnection.query(sql,async function (error: { code: any; }, users: User[])
+        {
+          if (error != null)
+          {    
+            next(error);    
+            return;
+          }
+          let reply = "OK, now please wait for an email and click the link to set a new password.";
+            reply += "Please check that rides@truro.cc is in your contact list and not treated as junk mail";
+          response.json(reply);
+        }); // query 2
+      }); // send mail
+    }); // query 1
   }

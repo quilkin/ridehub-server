@@ -5,6 +5,7 @@ import { dbconnection}  from './dbconn.js'  ;
 import  nodemailer from 'nodemailer';
 import { getHash } from './utils/hash.js'
 import { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
+import { Options } from 'nodemailer/lib/mailer/index.js';
 
 var transporter: nodemailer.Transporter<SentMessageInfo>;
 
@@ -65,12 +66,16 @@ export function SendNotificationEmails(ride: Ride, next: (arg0: { code: any; }) 
     }); 
  }
 
- 
-export async function SendRegistationEmail(user: User, next: (arg0: { code: any; }) => void) {
+export interface eMailMessage {
+    "transport": any,
+    "email" : any
+}
+export function CreateRegistationEmail(user: User, hash: string, next: (arg0: { code: any; }) => void) : eMailMessage{
 
    createTransporter();
    
-   user.code = await getHash(user.name + user.name);
+   //user.code = await getHash(user.name + user.name);
+   user.code = hash;
    const urlStr = `${process.env.serviceURL}?user=${user.name}&regcode=${user.code}`;
    const body = `Please click ${urlStr}  to complete your registration\n\r\n\rFor security, this link will expire in 15 minutes!`;
    
@@ -80,34 +85,25 @@ export async function SendRegistationEmail(user: User, next: (arg0: { code: any;
     subject: "TCC rides signup",
     text: body
    }
-
-   transporter.sendMail(eMail, function(error: any, info: { response: string; }){
-       if (error != null) {
-           next(error);
-           return;
-       }
-   }); 
+   let message : eMailMessage = {"transport": transporter,"email" : eMail}
+   return message;
 }
 
-export async function SendPasswordResetEmail(username: string, email: string, next: (arg0: { code: any; }) => void) {
+export function CreatePasswordResetEmail(username: string, email: string, hash: string, next: (arg0: { code: any; }) => void) : eMailMessage {
 
     createTransporter();
     
-    user.code = await getHash(user.name + user.name);
-    const urlStr = `${process.env.serviceURL}?pwuser=${user.name}&regcode=${user.code}`;
+    //const code = await getHash(username + username);
+    const urlStr = `${process.env.serviceURL}?pwuser=${username}&regcode=${hash}`;
     const body = `Please click ${urlStr} to reset your password or other details\n\r\n\rFor security, this link will expire in 15 minutes!`;
     
     var eMail = {
      from: "rides@truro.cc",
-     to: user.email,
+     to: email,
      subject: "TCC RideHub forgotten password",
      text: body
     }
  
-    transporter.sendMail(eMail, function(error: any, info: { response: string; }){
-        if (error != null) {
-            next(error);
-            return;
-        }
-    }); 
+    let message : eMailMessage = {"transport": transporter,"email" : eMail}
+    return message;
  }

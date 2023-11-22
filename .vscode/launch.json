@@ -15,8 +15,7 @@
                 "${relativeFile}"
             ],
             "runtimeArgs": [
-                "--require",
-                "tsx/suppress-warnings",
+
                 "--loader",
                 "tsx",
             ],

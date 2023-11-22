@@ -3,11 +3,12 @@ import bodyParser from "body-parser";
 import methodOverride from "method-override";
 import cors from "cors";
 import type { ErrorRequestHandler } from "express";
-import path from 'path';
-import { fileURLToPath } from 'url';
+//import path from 'path';
+//import { fileURLToPath } from 'url';
 import * as dotenv from "dotenv";
+//import http from 'http';
 
-import { logIn, getLogins, findUser, register, changeAccount } from "./src/logins.js";
+import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp } from "./src/logins.js";
 import { getRoutes, getGpx, saveRoute, updateRoute } from "./src/routes.js";
 import { getRidesForDate, saveRide, editRide, deleteRide } from "./src/rides.js";
 import { getParticipants, saveParticipant, leaveParticipant } from "./src/participants.js";
@@ -16,6 +17,7 @@ import { apiMethods } from './src/common/apiMethods.js';
 import { createPool } from './src/dbconn.js'  ;
 
 const app = express ();
+//const httpServer = new http.Server(app);
 const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
@@ -23,13 +25,19 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(methodOverride());
+app.use(express.static('../client'));
 
-
-
-  app.listen(port, () => {
+app.listen(port, () => {
     console.log("RideHub server listening on PORT:", port);
   });
 
+app.get('/', function (req, res) {
+    res.sendFile('index.html',  { root: '../client' })
+});
+app.get('/test', function (req, res) {
+    //res.json('Ridehub server running!');
+    res.send('Ridehub server running!');
+})
   // rides 
   app.post("/" + apiMethods.getRides,     getRidesForDate)
   app.post("/" + apiMethods.getGpx,       getGpx)
@@ -45,10 +53,13 @@ app.use(methodOverride());
   app.post("/" + apiMethods.updateRoute,  updateRoute)
   // logins
   app.post("/" + apiMethods.login,        logIn)
+  app.post("/" + apiMethods.signup,       signUp)
   app.post("/" + apiMethods.getLogins,    getLogins)
   app.post("/" + apiMethods.findUser,     findUser)
   app.post("/" + apiMethods.register,     register)
   app.post("/" + apiMethods.changeAccount,changeAccount)
+  app.post("/" + apiMethods.forgotPW,     forgotPW)
+
 
 
   //app.post("/" + apiMethods.tcx2gpx,   Tcx2Gpx)
@@ -68,3 +79,5 @@ app.use(methodOverride());
   createLogFiles('./');
   createPool('./.env');
   dotenv.config({ path: './.env' });
+  logError("RideHub server listening on PORT: "  + port);
+  logError("Environment: "  + process.env.NODE_ENV);
