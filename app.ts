@@ -19,11 +19,12 @@ import { createPool } from './src/dbconn.js'  ;
 const app = express ();
 //const httpServer = new http.Server(app);
 const port = process.env.PORT || 3000;
-app.use(express.json());
+app.use(express.json({ limit: '1mb'}));
 app.use(cors());
-// Configuring body parser middleware
-app.use(bodyParser.urlencoded({ extended: false }));
+// Configuring body parser 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ limit: '1mb',extended: false }));
+
 app.use(methodOverride());
 app.use(express.static('../client'));
 

@@ -1,5 +1,6 @@
 import { dbconnection } from './dbconn.js'  ;
 import { Route} from './common/route.js'
+import { GPXTrack } from './gpxtrack.js'
 
 export function getRoutes(request: { body: { data: number; }; }, response: { json: (arg0: Route[]) => void; }, next: (arg0: { code: any; }) => void) {
     const which : number = request.body.data;
@@ -46,16 +47,19 @@ export function getRoutes(request: { body: { data: number; }; }, response: { jso
 
 
   export function saveRoute(request: { body: { data: Route; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void){
-    var parseString = require('xml2js').parseString;
+    
 
     const route = request.body.data;
     route.dest = GetRidOfApostrophes(route.dest);
     route.description = GetRidOfApostrophes(route.description);
  
     let result: string = "";
-    let fullText: string;
+    let fullText: string= "";
+    let shortText: string = "";
     
     if (route.hasGPX == false || route.gpxData.length > 1000) {
+      fullText = route.gpxData;
+      const gpxTrack = new GPXTrack(fullText);
       // todo: garmin stuff
         // if (route.gpxData.includes("TrainingCenterDatabase")) {
         //     const sr: System.IO.StringReader = new System.IO.StringReader(route.URL);
@@ -66,39 +70,31 @@ export function getRoutes(request: { body: { data: number; }; }, response: { jso
            // already converted
             fullText = route.gpxData;
         }
-        //  else if (route.gpxData.toLowerCase().includes("gpx")) {
-        //     //const sr: System.IO.StringReader = new System.IO.StringReader(route.gpxData);
-        //     GPXTrack.SetRoot(route.gpxData);
-        //     fullText = GPXTrack.CreateGPX();
-        //     if (fullText == "") {
-        //         fullText = route.gpxData;
-        //     }
-        // } 
+         else if (route.gpxData.toLowerCase().includes("gpx")) {
+            //const sr: System.IO.StringReader = new System.IO.StringReader(route.gpxData);
+            gpxTrack.getObjects();
+            fullText = gpxTrack.CreateGPX();
+            // if (fullText == "") {
+            //     fullText = route.gpxData;
+            // }
+            shortText = gpxTrack.CreateSmallGPX();
+        } 
         else {
             fullText = route.gpxData;
-        }
-              // only for reading files; all data now handled as xml strings
-          // } else if (route.URL.ToLower().Contains(".tcx")) {
-          //     GarminTrack.SetRoot(route.URL);
-          //     fullText = GarminTrack.TCXtoGPX();
-          // } else {
-          //     GPXTrack.SetRoot(route.URL);
-          //     fullText = GPXTrack.CreateGPX();
-          //     if (fullText == "") {
-          //         fullText = fullText = route.URL;
-          //     }
-          // }
-
-        if (route.hasGPX) {
-            // will catch if not valid XML
-            parseString(fullText,function(error: any,result: any) {
-              if (error) {
-                next(error);
+            if (route.hasGPX) {
+              // will catch if not valid XML
+              try {
+                gpxTrack.checkXML();
+              }
+              catch (e : any) {
+                next(e);
                 return;
               }
-            })
+            }
         }
+
         fullText = GetRidOfApostrophes(fullText);
+        shortText = GetRidOfApostrophes(shortText);
 
         let query: string = `insert into routes (dest,distance,description,climbing,route,ownername,hasGPX)`;
         query += ` values ('${route.dest}','${route.distance}','${route.description}','${route.climbing}',`;

@@ -1,4 +1,8 @@
 improve log files - daily / weekly?
 
-tcx conversion
-check hash functions in logins.ts
+email login etc
+gpx manipulation
+common files
+change shrinking of track files
+errors : get first 2 lines of stack
+multi-segment tracks

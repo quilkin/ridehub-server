@@ -57,6 +57,8 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
           next(error);
           return;
         }
+        SendNotificationEmails(ride,next);
+
         const rideID = results.insertId;
         logUser(`Ride ${rideID} saved`);
         response.json(rideID.toString());
@@ -66,7 +68,6 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
 
     });
       //if (ride.leaderName.toLowerCase().startsWith("tester") === false)
-      SendNotificationEmails(ride,next);
   }
 
   export function editRide(request: { body: { data: Ride; }; }, response: { json: (arg0: string) => void; }, next: any) {
