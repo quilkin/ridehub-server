@@ -26,7 +26,7 @@ export class User {
     public climbs: number = 1;
     public notifications: number = 1;
     public passwordReset : boolean = false;
-    public messageTime: Date = new Date();
+    public messagetime: Date = new Date();   // was messageTime
     public error : string = '';
 
 

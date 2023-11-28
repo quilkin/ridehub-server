@@ -9,7 +9,7 @@ import * as dotenv from "dotenv";
 //import http from 'http';
 
 import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp } from "./src/logins.js";
-import { getRoutes, getGpx, saveRoute, updateRoute } from "./src/routes.js";
+import { getRoutes, getGpx, saveRoute, updateRoute, Tcx2Gpx, shortenRoutes } from "./src/routes.js";
 import { getRidesForDate, saveRide, editRide, deleteRide } from "./src/rides.js";
 import { getParticipants, saveParticipant, leaveParticipant } from "./src/participants.js";
 import { createLogFiles, logError, logUser } from './src/utils/logger.js';
@@ -36,9 +36,26 @@ app.get('/', function (req, res) {
     res.sendFile('index.html',  { root: '../client' })
 });
 app.get('/test', function (req, res) {
-    //res.json('Ridehub server running!');
     res.send('Ridehub server running!');
+    logError('Ridehub server running!');
 })
+// app.get('/crashtest1', function (req, res,next) {
+//   res.send('Ridehub server crash test 1');
+//   let err = new Error('crash test');
+//   next(err);
+//   next(err);
+//   next(err);
+// })
+// app.get('/crashtest2', function (req, res,next) {
+//   res.send('Ridehub server crash test 2');
+//   function recurse() {
+//     recurse();
+//   }
+//   recurse();
+// })
+
+// only used direct from browser
+  app.get("/ShortenRoutes",      shortenRoutes)
   // rides 
   app.post("/" + apiMethods.getRides,     getRidesForDate)
   app.post("/" + apiMethods.getGpx,       getGpx)
@@ -52,6 +69,8 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.getRoutes,    getRoutes)
   app.post("/" + apiMethods.saveRoute,    saveRoute)
   app.post("/" + apiMethods.updateRoute,  updateRoute)
+  app.post("/" + apiMethods.tcx2gpx,      Tcx2Gpx)
+ 
   // logins
   app.post("/" + apiMethods.login,        logIn)
   app.post("/" + apiMethods.signup,       signUp)
@@ -61,24 +80,25 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.changeAccount,changeAccount)
   app.post("/" + apiMethods.forgotPW,     forgotPW)
 
-
-
-  //app.post("/" + apiMethods.tcx2gpx,   Tcx2Gpx)
-  const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-    
-    console.error(err.message);
-    logError(err.message);
   
-    res.statusMessage = err.message;
-    res.status(500).send(err.message)
+  const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+    let message = err.message.toString();
+    if (message.includes('Learn more at')) {
+      // special for gmail error
+      let index = message.indexOf('Learn more at');
+      message = message.substring(0,index);
+    }
+    console.error(message);
+    logError(message);
+  
+    res.statusMessage = message;
+    res.status(500).send(message);
   }
 
   app.use(errorHandler);
 
-  // const __filename = fileURLToPath(import.meta.url);
-  // const __dirname = path.dirname(__filename);
   createLogFiles('./');
   createPool('./.env');
   dotenv.config({ path: './.env' });
   logError("RideHub server listening on PORT: "  + port);
-  logError("Environment: "  + process.env.NODE_ENV);
+  //logError("Environment: "  + process.env.NODE_ENV);

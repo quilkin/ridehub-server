@@ -27,7 +27,7 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
           user.pw = '';
         }
       }
-      logUser('User login: ' + user.id + 'name ' + user.name + ' email: ' + user.email);
+      logUser('User login: ' + user.id + ' name ' + user.name + ' email: ' + user.email);
       
       response.json(user);
     });
@@ -59,7 +59,7 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
             response.json(`DB Error: ${results.length} users found `);
 
           else {
-            const msgTime = results[0].messageTime;
+            const msgTime = results[0].messagetime;
             const diffMs = new Date().getTime() - msgTime.getTime();
             if (diffMs > 15 * 1000 * 60) {
               // 15 minutes

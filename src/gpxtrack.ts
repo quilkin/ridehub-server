@@ -1,73 +1,71 @@
 import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
-//import _ from 'lodash';
 
-// class Position {
-//     public Lat = 0; 
-//     public Lng = 0;
-// }
-
-// class TrackPoint {
-//     private altMeters = 0;
-//     private static lastAltMeters: number = 0;
-
-//     public get AltitudeMeters(): number {
-//         return this.altMeters;
-//     }
-
-//     public set AltitudeMeters(value: number) {
-//         this.altMeters = value;
-//         if (isNaN(this.altMeters)) {
-//             this.altMeters = TrackPoint.lastAltMeters;
-//         } else {
-//             TrackPoint.lastAltMeters = this.altMeters;
-//         }
-//     }
-
-//     public DistanceMeters = 0;
-//     public Positionx: Position[] = [];
-//     public pos: Position = new Position;
-// }
-
-// class Track {
-//     public TrackPoints: TrackPoint[] = [];
-// }
-
- 
-
-export class GPXTrack {
-    private static readonly ns11: string = "http://www.topografix.com/GPX/1/1";
-    private static readonly ns10: string = "http://www.topografix.com/GPX/1/0";
-    private static ns1: string;
-    
+class Track{
     protected root: any;
     protected gpx: any;
     protected track: any;
-    protected trackSeg: any;
-    protected trackPnt: any[] = [];
-    protected trackPntNew: any[] = [];
     protected xml: string;
     protected name : string;
- 
+    protected trackPnt: any[] = [];
+    protected trackPntNew: any[] = [];
+    protected parser : XMLParser;
+
+
     constructor( xmlText : string) {
         this.xml = xmlText;
         this.name = '';
-    }
- 
-    public getObjects(): void {
         const options = {
             ignoreAttributes: false,
             attributeNamePrefix : "@_"
         };
-        const parser = new XMLParser(options);
+        this.parser = new XMLParser(options);
+        
+    }
+    public checkXML() {
+        //const parser = new XMLParser();
         try {
-            this.root = parser.parse(this.xml);
+            this.root = this.parser.parse(this.xml);
             }
         catch (err) {
             throw new Error('Invalid XML in file');
         }
+    }
+    public CreateSmallGPX(): string {
+        // shorten to 100 trackpoints for fast display
+        
+        const pointCount = this.trackPnt.length;
+        const skipPoints = Math.floor(pointCount / 100) + 1;
+        this.trackPntNew = [];
+        for (let count = 0; count < pointCount; count += skipPoints) {
+            this.trackPntNew.push(this.trackPnt[count]);
+        }
+        this.trackPnt = this.trackPntNew;
+        // convert back to XML
+        const options = {
+            ignoreAttributes : false,
+            attributeNamePrefix : "@_"
+        };
+        const builder = new XMLBuilder(options);
+        // mark that this file has been shortened
+        this.gpx['@_shortened'] = 'true';
+        let xmlDataStr = builder.build(this.root);
+        return xmlDataStr;
+
+    }
+}
+
+export class GPXTrack extends Track {
+    
+    protected trackSeg: any;
+     
+    public getObjects(): void {
+
+        this.checkXML();
+
         this.gpx = this.root.gpx;
         this.track = this.gpx.trk;
-        this.name = this.track.name;
+        if (this.track.name != undefined)
+            this.name = this.track.name;
         //const trackSegs = this.track.trkseg;
         if (this.track.trkseg.length > 1) {
             throw new Error('multi track segments not yet allowed')
@@ -96,11 +94,6 @@ export class GPXTrack {
         }
     }
  
-
-    public checkXML() {
-        const parser = new XMLParser();
-        this.root = parser.parse(this.xml);
-    }
     public CreateGPX(): string {
 
         // shorten lat/longs to 5 decimals and elevations to 0 decimal
@@ -131,30 +124,83 @@ export class GPXTrack {
             this.gpx.metadata = null;
         let xmlDataStr = builder.build(this.root);
         return xmlDataStr;
+     
+    }
+    
+}
 
-        
+export class TCXTrack extends Track{
+    
+    // protected root: any;
+    // protected track: any;
+    // protected trackPnt: any[] = [];
+    protected lap: any;
+
+     public getObjects(): void {
+
+        this.checkXML();
+
+        this.lap = {};
+        if (this.root.TrainingCenterDatabase.Courses) {
+            this.name = this.root.TrainingCenterDatabase.Courses.Course.Name;
+            this.track = this.root.TrainingCenterDatabase.Courses.Course.Track;
+           // this.lap = this.root.TrainingCenterDatabase.Courses.Course.Lap;
+        }
+        else if (this.root.TrainingCenterDatabase.Activities) {
+            if (this.root.TrainingCenterDatabase.Activities.Activity.Lap.length > 1) 
+                throw new Error('multi lap routes not allowed')
+            this.track = this.root.TrainingCenterDatabase.Activities.Activity.Lap.Track;
+           // this.lap = this.root.TrainingCenterDatabase.Activities.Activity.Lap;
+        }
+        this.trackPnt = this.track.Trackpoint;
     }
  
-    public CreateSmallGPX(): string {
-        // shorten to 100 trackpoints for fast display
+    public CreateGPX(): string {
+        // convert tcx elements to gpx elements
+        // shorten lat/longs to 5 decimals and elevations to 0 decimal
   
+        this.root.gpx = {};
+        this.root.gpx.trk = {};
+        this.root.gpx.trk.trkseg = {};
+        
         const pointCount = this.trackPnt.length;
-        const skipPoints = Math.floor(pointCount / 100) + 1;
-        this.trackPntNew = [];
-        for (let count = 0; count < pointCount; count += skipPoints) {
-            this.trackPntNew.push(this.trackPnt[count]);
+        this.root.gpx.trk.trkseg.trkpt = new Array(pointCount);
+ 
+        for (let count = 0; count < pointCount; ++count ) {
+            let lat = this.trackPnt[count].Position.LatitudeDegrees;
+            let lon = this.trackPnt[count].Position.LongitudeDegrees;
+            let ele = this.trackPnt[count].AltitudeMeters;
+            lat = Number.parseFloat(lat).toFixed(5);
+            lon = Number.parseFloat(lon).toFixed(5);
+            ele = Number.parseFloat(ele).toFixed(0);
+
+            // remove the TCX elements and recreate GPX elements
+            delete this.trackPnt[count];
+
+            this.root.gpx.trk.trkseg.trkpt[count] = {};
+            this.root.gpx.trk.trkseg.trkpt[count]['@_lat'] = lat.toString();
+            this.root.gpx.trk.trkseg.trkpt[count]['@_lon'] = lon.toString();
+            this.root.gpx.trk.trkseg.trkpt[count].ele = ele.toString();
+
         }
-        this.trackPnt = this.trackPntNew;
         // convert back to XML
         const options = {
             ignoreAttributes : false,
             attributeNamePrefix : "@_"
         };
         const builder = new XMLBuilder(options);
-        // mark that this file has been shortened
-        this.gpx['@_shortened'] = 'true';
+        this.root.gpx.trk.name = this.name;
+        // mark that this file has been converted / checked
+        this.root.gpx['@_creator'] = 'quilkin.co.uk';
+
+        // get rid of old TCX elements no longer 
+        
+        delete this.root.TrainingCenterDatabase;
+        // prepare for making smallGPX
+        this.trackPnt = this.root.gpx.trk.trkseg.trkpt;
         let xmlDataStr = builder.build(this.root);
         return xmlDataStr;
 
+        
     }
 }

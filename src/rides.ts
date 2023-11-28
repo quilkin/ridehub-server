@@ -32,8 +32,7 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
     ride.meetingAt = GetRidOfApostrophes(ride.meetingAt);
     ride.description = GetRidOfApostrophes(ride.description);
 
-
-    // check for existing rides
+     // check for existing rides
     let sql = `SELECT dest FROM rides where date= '${ride.date}' and leaderName = '${ride.leaderName}'`
     dbconnection.query(sql,function (error: { code: any; }, results: string[])
     {
@@ -50,24 +49,25 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
       sql += `'${ride.description}','${ride.groupSize}','${ride.minSpeed}','${ride.maxSpeed}')`;
       // get new ride ID
 
-      dbconnection.query(sql,function (error: { code: any; }, results: { insertId: { toString: () => string; }; })
+      dbconnection.query(sql,function (error: { code: any; }, results: { insertId: number; })
       {
        
         if (error != null) {
           next(error);
           return;
         }
-        SendNotificationEmails(ride,next);
+        ride.rideID = results.insertId;
+        SendNotificationEmails(ride,response,next) ;
 
-        const rideID = results.insertId;
-        logUser(`Ride ${rideID} saved`);
-        response.json(rideID.toString());
-    
+          // const rideID = results.insertId;
+          // logUser(`Ride ${rideID} saved`);
+          // response.json(rideID.toString());
+        
+
 
       })
 
     });
-      //if (ride.leaderName.toLowerCase().startsWith("tester") === false)
   }
 
   export function editRide(request: { body: { data: Ride; }; }, response: { json: (arg0: string) => void; }, next: any) {

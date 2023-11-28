@@ -1,8 +1,8 @@
 improve log files - daily / weekly?
 
 email login etc
-gpx manipulation
-common files
-change shrinking of track files
 errors : get first 2 lines of stack
 multi-segment tracks
+change class names to equal sql fields?
+redo BobMasbridge routes
+edit ride

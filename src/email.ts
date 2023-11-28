@@ -6,6 +6,7 @@ import  nodemailer from 'nodemailer';
 import { getHash } from './utils/hash.js'
 import { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
 import { Options } from 'nodemailer/lib/mailer/index.js';
+import { logUser } from './utils/logger.js';
 
 var transporter: nodemailer.Transporter<SentMessageInfo>;
 
@@ -23,7 +24,7 @@ function createTransporter() {
 /***
  * create and send an email about the new ride to all users, unless they opted out
  */
-export function SendNotificationEmails(ride: Ride, next: (arg0: { code: any; }) => void) {
+export function SendNotificationEmails(ride: Ride, response: { json: any; }, next: (arg0: { code: any; }) => void)  {
 
     createTransporter();
     
@@ -49,21 +50,21 @@ export function SendNotificationEmails(ride: Ride, next: (arg0: { code: any; }) 
     dbconnection.query(sql,function (error: { code: any; }, results: string[])
     {
         if (error != null) {
-        next(error);
-        return;
-        }
-        eMail.bcc = results;
-
-    })
-    transporter.sendMail(eMail, function(error: any, info: { response: string; }){
-        if (error != null) {
             next(error);
             return;
         }
-        else {
-         //   console.log('Email sent: ' + info.response);
-            }
-    }); 
+        eMail.bcc = results;
+   
+        transporter.sendMail(eMail, function(error: any, info: { response: string; }){
+            if (error != null) {
+                next(error);
+                return;
+              }
+          const rideID = ride.rideID;
+          logUser(`Ride ${rideID} saved`);
+          response.json(rideID.toString());
+        }); 
+    })
  }
 
 export interface eMailMessage {
