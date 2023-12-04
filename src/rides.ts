@@ -33,7 +33,7 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
     ride.description = GetRidOfApostrophes(ride.description);
 
      // check for existing rides
-    let sql = `SELECT dest FROM rides where date= '${ride.date}' and leaderName = '${ride.leaderName}'`
+    let sql = `SELECT rideID FROM rides where date= '${ride.date}' and leaderName = '${ride.leaderName}'`
     dbconnection.query(sql,function (error: { code: any; }, results: string[])
     {
       if (error != null) {
@@ -51,26 +51,36 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
 
       dbconnection.query(sql,function (error: { code: any; }, results: { insertId: number; })
       {
-       
         if (error != null) {
           next(error);
           return;
         }
         ride.rideID = results.insertId;
         SendNotificationEmails(ride,response,next) ;
-
-          // const rideID = results.insertId;
-          // logUser(`Ride ${rideID} saved`);
-          // response.json(rideID.toString());
-        
-
-
       })
-
     });
   }
 
   export function editRide(request: { body: { data: Ride; }; }, response: { json: (arg0: string) => void; }, next: any) {
+    const ride = request.body.data;
+    ride.meetingAt = GetRidOfApostrophes(ride.meetingAt);
+    ride.description = GetRidOfApostrophes(ride.description);
+    
+    let sql = `update rides set meetingAt = '${ride.meetingAt}', description = '${ride.description}',`;
+    sql += ` time = '${ride.time}', groupSize = '${ride.groupSize}', minSpeed = '${ride.minSpeed}', maxSpeed= '${ride.maxSpeed}'`;
+    sql += `, date= '${ride.date}', leaderName='${ride.leaderName}' where rideID = '${ride.rideID}'`;
+
+    dbconnection.query(sql,function (error: { code: any; }, results: { insertId: number; })
+    {
+      if (error != null) {
+        next(error);
+        return;
+      }
+      // todo : send emails to signed-up riders if date changed?
+      //SendNotificationEmails(ride,response,next) ;
+      response.json('OK');
+      
+    })
 
   }
 

@@ -3,17 +3,12 @@ import { Route} from './common/route.js'
 import { GPXTrack, TCXTrack } from './gpxtrack.js'
 
 
-export function getRoutes(request: { body: { data: number; }; }, response: { json: (arg0: Route[]) => void; }, next: (arg0: { code: any; }) => void) {
-    const which : number = request.body.data;
+export function getRoutesById(request: { body: { data: number[]; }; }, response: { json: (arg0: Route[]) => void; }, next: (arg0: { code: any; }) => void) {
+    const idList : number[] = request.body.data;
 
     let query: string;
-	  switch (which) {
-	    case 1: query = `SELECT * FROM routes where distance<50`;       break;
-	    case 2: query = `SELECT * FROM routes where distance>=50 and distance < 80`;     break;
-	    case 3: query = `SELECT * FROM routes where distance>=80`;      break;
-	    case 0:
-	   default: query = `SELECT id,dest,description,distance,climbing,ownername,hasGPX FROM routes`;    break;
-	  }
+	  query = `SELECT id,dest,distance,climbing,ownername,hasGPX,miniroute FROM routes where id in (${idList})`;   
+
     dbconnection.query(query,function (error: { code: any; }, results: any[])
     {
       if (error != null) {
@@ -23,6 +18,27 @@ export function getRoutes(request: { body: { data: number; }; }, response: { jso
         response.json(results);
     });
   }
+  export function getRoutesByDs(request: { body: { data: number[]; }; }, response: { json: (arg0: Route[]) => void; }, next: (arg0: { code: any; }) => void) {
+    if (request.body.data.length < 2) {
+      throw new Error('insufficient distance info for getting routes');
+    }
+    const min : number = request.body.data[0];
+    const max : number = request.body.data[1];
+
+    let query: string;
+	  query = `SELECT id,dest,distance,climbing,ownername,hasGPX,miniroute FROM routes where distance>=${min} and distance < ${max}`;   
+
+    dbconnection.query(query,function (error: { code: any; }, results: any[])
+    {
+      if (error != null) {
+        next(error);
+      }
+      else
+        response.json(results);
+    });
+  }
+
+  
   export function getGpx(request: { body: { data: number; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
     const routeId : number = request.body.data;
     const query = `SELECT route FROM routes where id=${routeId}`;
@@ -51,7 +67,7 @@ export function getRoutes(request: { body: { data: number; }; }, response: { jso
     
     const route = request.body.data;
     route.dest = GetRidOfApostrophes(route.dest);
-    route.description = GetRidOfApostrophes(route.description);
+   // route.description = GetRidOfApostrophes(route.description);
  
     //let result: string = "";
     let fullText: string= "";
@@ -85,8 +101,8 @@ export function getRoutes(request: { body: { data: number; }; }, response: { jso
     fullText = GetRidOfApostrophes(fullText);
     shortText = GetRidOfApostrophes(shortText);
 
-    let query: string = `insert into routes (dest,distance,description,climbing,route,ownername,hasGPX,miniroute)`;
-    query += ` values ('${route.dest}','${route.distance}','${route.description}','${route.climbing}',`;
+    let query: string = `insert into routes (dest,distance,climbing,route,ownername,hasGPX,miniroute)`;
+    query += ` values ('${route.dest}','${route.distance}','${route.climbing}',`;
     query += `'${fullText}','${route.owner}',${route.hasGPX ? 1 : 0},'${shortText}')`;
 
     dbconnection.query(query,function (error: { code: any; }, results: { insertId: string; })
@@ -119,7 +135,7 @@ export function updateRoute(request: { body: { data: Route; }; }, response: { js
 
     const route = request.body.data;
     route.dest = GetRidOfApostrophes(route.dest);
-    route.description = GetRidOfApostrophes(route.description);
+    //route.description = GetRidOfApostrophes(route.description);
 
     const sql = `update routes set distance = ${route.distance}, climbing = ${route.climbing}, dest = '${route.dest}' where id = ${route.id}`
     dbconnection.query(sql,function (error: { code: any; }, results: { insertId: string; })
@@ -156,7 +172,8 @@ export function shortenRoutes(request: any, response: { json: (arg0: string) => 
           gpxTrack.getObjects();
           route.route = gpxTrack.CreateGPX();
         }
- 
+        var count1 = (route.route.match(/trkpt/g) || []).length / 2;
+    
         if (route.miniroute != null)
           // already done
           return;
@@ -164,6 +181,10 @@ export function shortenRoutes(request: any, response: { json: (arg0: string) => 
   
         gpxTrack.getObjects();
         const shortText = gpxTrack.CreateSmallGPX();
+
+        var count2 = (shortText.match(/trkpt/g) || []).length /2 ;
+        console.log('Route shortened from '+ count1 + ' to ' + count2 + ' trackpoints');
+
         query = `update routes set miniroute = '${shortText}' where id = ${route.id}`
         dbconnection.query(query,function (error: { code: any; }, results: any)
         {
@@ -171,7 +192,7 @@ export function shortenRoutes(request: any, response: { json: (arg0: string) => 
             next(error);
             return;
           }
-          console.log('updated route '+ route.id);
+          //console.log('updated route '+ route.id);
         })
       });
     });

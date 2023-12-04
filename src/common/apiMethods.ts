@@ -1,10 +1,13 @@
 export enum apiMethods {
+  // doesn't matter what these strings are as long as they are all different!
+  // (same enum used by client and server)
     signup = 'Signup',
     login = 'Login',
     changeAccount = 'ChangeAccount',
     forgotPW ='ForgetPassword',
-    getRides = 'GetRidesForDate',  // done
-    getRoutes = 'GetRoutes',        // done
+    getRides = 'GetRidesForDate',  
+    getRoutesById = 'GetRoutesByID',    
+    getRoutesByDs = 'GetRoutesByDistance',       
     getPpts = 'GetParticipants',
     getGpx = 'GetGPXforRoute',
     saveRoute = 'SaveRoute',

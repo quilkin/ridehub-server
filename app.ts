@@ -9,7 +9,7 @@ import * as dotenv from "dotenv";
 //import http from 'http';
 
 import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp } from "./src/logins.js";
-import { getRoutes, getGpx, saveRoute, updateRoute, Tcx2Gpx, shortenRoutes } from "./src/routes.js";
+import { getRoutesById, getRoutesByDs, getGpx, saveRoute, updateRoute, Tcx2Gpx, shortenRoutes } from "./src/routes.js";
 import { getRidesForDate, saveRide, editRide, deleteRide } from "./src/rides.js";
 import { getParticipants, saveParticipant, leaveParticipant } from "./src/participants.js";
 import { createLogFiles, logError, logUser } from './src/utils/logger.js';
@@ -66,7 +66,8 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.editRide,     editRide)
   app.post("/" + apiMethods.deleteRide,   deleteRide)
   // routes
-  app.post("/" + apiMethods.getRoutes,    getRoutes)
+  app.post("/" + apiMethods.getRoutesById,getRoutesById)
+  app.post("/" + apiMethods.getRoutesByDs,getRoutesByDs)
   app.post("/" + apiMethods.saveRoute,    saveRoute)
   app.post("/" + apiMethods.updateRoute,  updateRoute)
   app.post("/" + apiMethods.tcx2gpx,      Tcx2Gpx)

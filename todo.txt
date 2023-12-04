@@ -1,8 +1,7 @@
 improve log files - daily / weekly?
-
+merge error and user logs
 email login etc
 errors : get first 2 lines of stack
 multi-segment tracks
-change class names to equal sql fields?
 redo BobMasbridge routes
-edit ride
+send emails to signed-up riders if date changed?

@@ -31,7 +31,7 @@ class Track{
         }
     }
     public CreateSmallGPX(): string {
-        // shorten to 100 trackpoints for fast display
+        // shorten to ~100 trackpoints for fast display
         
         const pointCount = this.trackPnt.length;
         const skipPoints = Math.floor(pointCount / 100) + 1;
@@ -39,7 +39,7 @@ class Track{
         for (let count = 0; count < pointCount; count += skipPoints) {
             this.trackPntNew.push(this.trackPnt[count]);
         }
-        this.trackPnt = this.trackPntNew;
+        this.root.gpx.trk.trkseg.trkpt = this.trackPntNew;
         // convert back to XML
         const options = {
             ignoreAttributes : false,
@@ -47,7 +47,7 @@ class Track{
         };
         const builder = new XMLBuilder(options);
         // mark that this file has been shortened
-        this.gpx['@_shortened'] = 'true';
+        //this.gpx['@_shortened'] = 'true';
         let xmlDataStr = builder.build(this.root);
         return xmlDataStr;
 

@@ -61,7 +61,7 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
                 return;
               }
           const rideID = ride.rideID;
-          logUser(`Ride ${rideID} saved`);
+          logUser(`Ride ${rideID} saved by ${ride.leaderName}`);
           response.json(rideID.toString());
         }); 
     })
