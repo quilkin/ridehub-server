@@ -5,3 +5,4 @@ errors : get first 2 lines of stack
 multi-segment tracks
 redo BobMasbridge routes
 send emails to signed-up riders if date changed?
+change type of 'next' so that error can be redefined, rather than thrown

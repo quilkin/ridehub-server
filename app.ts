@@ -84,11 +84,11 @@ app.get('/test', function (req, res) {
   
   const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     let message = err.message.toString();
-    if (message.includes('Learn more at')) {
-      // special for gmail error
-      let index = message.indexOf('Learn more at');
-      message = message.substring(0,index);
-    }
+    // if (message.includes('Learn more at')) {
+    //   // special for gmail error
+    //   let index = message.indexOf('Learn more at');
+    //   message = message.substring(0,index);
+    // }
     console.error(message);
     logError(message);
   

@@ -45,28 +45,30 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
       });
   }
 
-  export function findUser(request: { body: { data: string; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+  export function findUser(request: { body: { data: string; }; }, response: { json: (arg0: User) => void; }, next: (arg0: Error) => void) {
     
     let userName : string = request.body.data;
-    let sql = `select id, messagetime  from logins where name = ${userName}`;
-    dbconnection.query(sql,function (error: { code: any; }, results: User[])
+    let sql = `select *  from logins where name = '${userName}'`;
+    dbconnection.query(sql,function (error: Error | null, results: User[])
       {
         if (error != null) {
           next(error);
         }
         else {
           if (results.length != 1)
-            response.json(`DB Error: ${results.length} users found `);
+           // response.json(`DB Error: ${results.length} users found `);
+           throw new Error(`DB Error: ${results.length} users found `);
 
           else {
             const msgTime = results[0].messagetime;
             const diffMs = new Date().getTime() - msgTime.getTime();
             if (diffMs > 15 * 1000 * 60) {
               // 15 minutes
-              response.json(`Sorry, email code has timed out. Please request your details again.`);
+              error = new Error(`Sorry, email code has timed out. Please request your details again.`);
+              next(error);
             }
             else
-              response.json(`OK${results[0].id}`);
+              response.json(results[0]);
           }
         }
       });
@@ -79,7 +81,7 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
     const hash : string = await getHash(user.name + user.name);
     if (user.code === hash)
     {
-      let sql = `update logins set role = 1 where name = '${User.name}'`;
+      let sql = `update logins set role = 1 where name = '${user.name}'`;
       dbconnection.query(sql,function (error: { code: any; }, results: User[])
       {
         if (error != null) {
@@ -102,7 +104,7 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
     if (user.pw !== '') // password has actually been changed 
     {
       const hash : string = await getHash(user.pw);
-      let sql = `update logins set pw = '${user.pw}' where id = ${user.id}`;
+      let sql = `update logins set pw = '${hash}' where id = ${user.id}`;
       dbconnection.query(sql,function (error: { code: any; }, results: User[])
       {
         if (error != null) {    next(error);  return;   }
@@ -140,7 +142,7 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
       response.json("Password must be between 4 and 10 characters");
       return;
     }
-    let hash : string = await getHash(user.pw);
+    let pwHash : string = await getHash(user.pw);
     let sql =  "SELECT Id, name, pw, email FROM logins";
     dbconnection.query(sql,async function (error: { code: any; }, users: User[])
     {
@@ -158,20 +160,21 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
           return;
         }
       };
-      hash = await getHash(user.name + user.name);
+      let userHash = await getHash(user.name + user.name);
 
-      const message = CreateRegistationEmail(user,hash,next);
+      const message = CreateRegistationEmail(user,userHash,next);
       message.transport.sendMail(message.email, function(error: any, info: any){
         if (error != null) {
             console.log("registration email failed");
             next(error);
             return;
         }
-        console.log("email sent ok");
+        //console.log("email sent ok");
         const now = new Date();
+        
         var pDateSeconds = now.valueOf()/1000;
         sql =  `insert into logins (name, pw, email,role,messagetime,units,climbs,notifications) values`;
-        sql += ` ('${user.name}','${hash}','${user.email}',0,FROM_UNIXTIME('${pDateSeconds}'),'k',1,1)`;
+        sql += ` ('${user.name}','${pwHash}','${user.email}',0,FROM_UNIXTIME('${pDateSeconds}'),'k',1,1)`;
         dbconnection.query(sql,function (error: { code: any; }, results: User[])
         {
           if (error != null)
@@ -181,6 +184,7 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
           }
           let reply = "Thank you, please wait for an email and click link to complete registration."
           reply +=  "Please check that rides@truro.cc is in your contact list and not treated as junk mail"
+          logUser('User signup: ' + ' name ' + user.name + ' email: ' + user.email);
           response.json(reply);
         }); // query 2
       }); // sendmail
@@ -230,7 +234,8 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
             return;
           }
           let reply = "OK, now please wait for an email and click the link to set a new password.";
-            reply += "Please check that rides@truro.cc is in your contact list and not treated as junk mail";
+          reply += "Please check that rides@truro.cc is in your contact list and not treated as junk mail";
+          logUser('User password request: ' + ' name ' + username + ' email: ' + email);
           response.json(reply);
         }); // query 2
       }); // send mail

@@ -95,7 +95,10 @@ export function getRoutesById(request: { body: { data: number[]; }; }, response:
         shortText = gpxTrack.CreateSmallGPX();
     } 
     else {
-      throw new Error('gpx data type not catered')
+      // no gpx
+      fullText = '';
+      shortText = '';
+     // throw new Error('gpx data type not catered')
     }
 
     fullText = GetRidOfApostrophes(fullText);
