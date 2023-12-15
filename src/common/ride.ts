@@ -6,8 +6,8 @@ export class Ride {
     rideID = 0;
     time = 540;     // default 9 am
     meetingAt = 'Lemon Quay';
-    description = 'description';
+    description = '';
     groupSize = 10;
-    minSpeed = 16;   
-    maxSpeed = 18; 
+    minSpeed = 0;   
+    maxSpeed = 0; 
 }

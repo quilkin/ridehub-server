@@ -1,7 +1,7 @@
 import { dbconnection } from './dbconn.js'  ;
 import { Route} from './common/route.js'
 import { GPXTrack, TCXTrack } from './gpxtrack.js'
-
+import {  logUser } from './utils/logger.js';
 
 export function getRoutesById(request: { body: { data: number[]; }; }, response: { json: (arg0: Route[]) => void; }, next: (arg0: { code: any; }) => void) {
     const idList : number[] = request.body.data;
@@ -114,6 +114,7 @@ export function getRoutesById(request: { body: { data: number[]; }; }, response:
         next(error);
         return;
       }
+      logUser(`Route ${route.dest} saved `);
       response.json(results.insertId.toString());
     })
   }

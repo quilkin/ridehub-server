@@ -66,27 +66,12 @@ export class GPXTrack extends Track {
         this.track = this.gpx.trk;
         if (this.track.name != undefined)
             this.name = this.track.name;
+        if (this.name.length > 30)
+            this.name= this.name.substring(0,30);
         //const trackSegs = this.track.trkseg;
         if (this.track.trkseg.length > 1) {
             throw new Error('multi track segments not yet allowed')
-            // this.trackPnt = [];
-            // for (let seg=0; seg < this.track.trkseg.length; seg++) {
-            //     this.trackSeg[seg] = this.track.trkseg[seg];
-            //     this.trackPnt[seg] = this.trackSeg[seg].trkpt;
-            //     // const trackSeg = trackSegs[seg];
-            //     // for (let trkpnt=0; trkpnt < trackSeg.trkpt.length; trkpnt++) {
-            //     //     this.trackPnt.push(trackSeg.trkpt[trkpnt]); 
-            //     // }
-            //     //.prototype.push.apply(this.trackPnt,trackSegs[seg]);
-            //     //this.trackPnt.push(this.track.trkseg[seg].trkpt);
-            //     //this.trackPnt = [...this.trackPnt,...trackSegs[seg]];
-            //     //this.trackPnt = this.trackPnt.concat(trackSegs[seg].trkpt);
-            // }
-            // // trackSegs[0] = this.trackPnt;
-            // // for (let seg=1; seg < trackSegs.length; seg++) {
-            // //     trackSegs[seg] = null;
-            // // }
-            // // this.trackSeg = trackSegs[0];
+
         }
         else {
             this.trackSeg = this.track.trkseg;

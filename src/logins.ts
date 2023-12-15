@@ -55,10 +55,10 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
           next(error);
         }
         else {
-          if (results.length != 1)
-           // response.json(`DB Error: ${results.length} users found `);
-           throw new Error(`DB Error: ${results.length} users found `);
-
+          if (results.length != 1) {
+           error = new Error(`DB Error: ${results.length} users found `);
+           next(error);
+          }
           else {
             const msgTime = results[0].messagetime;
             const diffMs = new Date().getTime() - msgTime.getTime();

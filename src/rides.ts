@@ -56,6 +56,7 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
           return;
         }
         ride.rideID = results.insertId;
+        logUser(`Ride ${ride.rideID} saved by ${ride.leaderName} `);
         SendNotificationEmails(ride,response,next) ;
       })
     });
@@ -76,6 +77,7 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
         next(error);
         return;
       }
+      logUser(`Ride ${ride.rideID} edited `);
       // todo : send emails to signed-up riders if date changed?
       //SendNotificationEmails(ride,response,next) ;
       response.json('OK');
@@ -90,11 +92,12 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
 
     dbconnection.query(sql,function (error: { code: any; }, results: string)
     {
-      logUser(`Ride ${rideID} deleted`);
-      if (error != null) 
+      if (error != null) {
         next(error);
-      else
-       response.json('OK');
+        return;
+      }
+      logUser(`Ride ${rideID} deleted`);
+      response.json('OK');
     });
   }
 

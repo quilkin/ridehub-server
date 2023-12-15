@@ -1,8 +1,6 @@
 improve log files - daily / weekly?
-merge error and user logs
-email login etc
 errors : get first 2 lines of stack
 multi-segment tracks
-redo BobMasbridge routes
+redo BobMansbridge routes
 send emails to signed-up riders if date changed?
 change type of 'next' so that error can be redefined, rather than thrown
