@@ -35,6 +35,9 @@ app.listen(port, () => {
 app.get('/', function (req, res) {
     res.sendFile('index.html',  { root: '../client' })
 });
+app.get('/logs', function (req, res) {
+  res.sendFile('./logs/ridehub.log',  { root: './' })
+})
 app.get('/test', function (req, res) {
     res.send('Ridehub server running!');
     logError('Ridehub server running!');

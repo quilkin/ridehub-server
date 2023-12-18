@@ -10,4 +10,5 @@ export class Ride {
     groupSize = 10;
     minSpeed = 0;   
     maxSpeed = 0; 
+    emailRequired = false; 
 }

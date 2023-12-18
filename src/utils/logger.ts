@@ -32,3 +32,10 @@ export function logUser(mess: string) { //
     
   }
 };
+// export function getLogFiles(request: any, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+
+//   const read_log_file = fs.createReadStream('./logs/ridehub.log');
+//   const data = read_log_file.read();
+//   response = data;
+//   //user_file = fs.createWriteStream(path + '/logs/users.log', {flags : 'a'});
+// }

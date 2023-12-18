@@ -27,6 +27,23 @@ import {  logUser } from './utils/logger.js';
         });
       }
    
+      export function getParticipantsForRide(rideID: number , next: (arg0: { code: any; }) => void) : string[]{
+
+        const participants = [] as string[];
+ 
+        let query = `SELECT rider FROM Participants where rideID = ${rideID}`;
+        dbconnection.query(query,function (error: { code: any; } , results: string[])
+        {
+          if (error != null) {
+            next(error);
+            return [];
+          }
+          return results;
+
+        });
+        return [];
+      }
+      
       export function saveParticipant(request: { body: { data: Participant; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
 	    let result: string = "";
         const pp : Participant = request.body.data;

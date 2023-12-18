@@ -88,14 +88,11 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
           next(error);
         }
         else {
-          logUser('User register: ' + user.id + 'name ' + user.name + ' email: ' + user.email);
+          logUser('User register: name ' + user.name + ' email: ' + user.email);
           response.json("Thank you, you have now registered");
         }
-
       });
-
     }
-
   }
 
   export async function changeAccount(request: { body: { data: User; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {

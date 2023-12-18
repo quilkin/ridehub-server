@@ -28,8 +28,8 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
 
     createTransporter();
     
-    let time: string = TimesDates.StrFromIntDays(ride.date);
-    let body: string = `A new ride has been posted! :)\n\r    Date/Time: ${time}.\n    Decription: ${ride.description}\n\r`;
+    let date: string = TimesDates.StrFromIntDays(ride.date);
+    let body: string = `A new ride has been posted! :)\n\r    Date: ${date}.\n    Decription: ${ride.description}\n\r`;
     body += "Please visit https://ridehub.truro.cc for details\n\r\n\r";
     body += "============================================================================================\n\r";
     body += "If you no longer wish to receive these emails, you can edit your preferences in the RideHub 'Account' page\n\r";
@@ -46,26 +46,77 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
     }
     // get email list from DB
     // todo: ***** send to all roles after testing ****************
-    let sql: string = "SELECT email FROM logins where notifications > 0 and role > 1";
-    dbconnection.query(sql,function (error: { code: any; }, results: string[])
+   // let sql: string = "SELECT email FROM logins where notifications > 0 and role > 1";
+    let sql: string = "SELECT email FROM logins where notifications > 1";
+    dbconnection.query(sql,function (error: { code: any; }, results: any[])
     {
         if (error != null) {
             next(error);
             return;
         }
-        eMail.bcc = results;
-   
+        eMail.bcc = [];
+        for (let row = 0; row < results.length; row++) {
+            let e = results[row];
+            eMail.bcc.push(e.email)
+          }
+    
         transporter.sendMail(eMail, function(error: any, info: { response: string; }){
             if (error != null) {
                 next(error);
                 return;
               }
           const rideID = ride.rideID;
-          logUser(`Ride ${rideID} saved by ${ride.leaderName}`);
+          logUser(`New ride emails sent for ride ${rideID}`);
+           response.json(rideID.toString());
+        }); 
+    })
+ }
+
+
+ export function SendChangeNotificationEmails(ride: Ride, riders: string[], response: { json: any; }, next: (arg0: { code: any; }) => void)  {
+
+    createTransporter();
+    
+    let date: string = TimesDates.StrFromIntDays(ride.date);
+    let time: string = TimesDates.fromIntTime(ride.time);
+    let body: string = `A ride that you have joined has been changed! :O\n\r   Date/Time: ${date} at ${time}.\n    Decription: ${ride.description}\n\r`;
+    body += "Please visit https://ridehub.truro.cc for details\n\r\n\r";
+    
+    var eMail = {
+    from: "rides@truro.cc",
+    to: "rides@truro.cc",
+    subject: "TCC Ride : your ride has changed",
+    text: body,
+    bcc: [] as string[]
+    // bcc: results
+    }
+    // get email list from DB
+    // todo: ***** send to all roles after testing ****************
+    let sql: string = `SELECT email FROM logins where notifications > 0  and name in (${riders})`;
+    dbconnection.query(sql,function (error: { code: any; }, results: any[])
+    {
+        if (error != null) {
+            next(error);
+            return;
+        }
+        eMail.bcc = [];
+        for (let row = 0; row < results.length; row++) {
+            let e = results[row];
+            eMail.bcc.push(e.email)
+          }
+           
+        transporter.sendMail(eMail, function(error: any, info: { response: string; }){
+            if (error != null) {
+                next(error);
+                return;
+              }
+          const rideID = ride.rideID;
+          logUser(`Change emails sent for ride ${rideID}`);
           response.json(rideID.toString());
         }); 
     })
  }
+
 
 export interface eMailMessage {
     "transport": any,

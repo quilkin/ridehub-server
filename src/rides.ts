@@ -1,8 +1,9 @@
 import { dbconnection } from './dbconn.js'  ;
 
 import { Ride } from './common/ride.js'
-import { SendNotificationEmails } from './email.js'
+import { SendNotificationEmails , SendChangeNotificationEmails } from './email.js'
 import {  logUser } from './utils/logger.js';
+import { getParticipantsForRide } from './participants.js'
 
 function GetRidOfApostrophes(data : string): string
 {
@@ -78,13 +79,28 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
         return;
       }
       logUser(`Ride ${ride.rideID} edited `);
-      // todo : send emails to signed-up riders if date changed?
-      //SendNotificationEmails(ride,response,next) ;
-      response.json('OK');
-      
+      // send change notification to all riders for that ride
+      // only send these if ride has changed date or time
+      if (ride.emailRequired) {
+        sql = `SELECT rider FROM Participants where rideID = ${ride.rideID}`;
+        dbconnection.query(sql,function (error: { code: any; } , result: any[])
+          {
+            let riders : string[] = [];
+            for (let row = 0; row < result.length; row++) {
+              let r = result[row];
+              riders.push("'"+r.rider+"'")
+            }
+            logUser(`Ride ${ride.rideID} edited by ${ride.leaderName} `);
+            SendChangeNotificationEmails(ride,riders,response,next) ;
+            response.json('OK');
+          })
+      }
+      else
+        response.json('OK');
     })
-
   }
+
+  
 
   export function deleteRide(request: { body: { data: number; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
     const rideID = request.body.data;
