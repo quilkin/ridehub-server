@@ -91,7 +91,7 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
               riders.push("'"+r.rider+"'")
             }
             logUser(`Ride ${ride.rideID} edited by ${ride.leaderName} `);
-            SendChangeNotificationEmails(ride,riders,response,next) ;
+            SendChangeNotificationEmails(ride,riders,response,false,next) ;
             response.json('OK');
           })
       }
@@ -102,9 +102,9 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
 
   
 
-  export function deleteRide(request: { body: { data: number; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
-    const rideID = request.body.data;
-    const sql = `delete from rides where rideID = ${rideID}`;
+  export function deleteRide(request: { body: { data: Ride; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+    const ride : Ride = request.body.data;
+    let  sql = `delete from rides where rideID = ${ride.rideID}`;
 
     dbconnection.query(sql,function (error: { code: any; }, results: string)
     {
@@ -112,7 +112,20 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
         next(error);
         return;
       }
-      logUser(`Ride ${rideID} deleted`);
+      logUser(`Ride ${ride.rideID} deleted`);
+      sql = `SELECT rider FROM Participants where rideID = ${ride.rideID}`;
+      dbconnection.query(sql,function (error: { code: any; } , result: any[])
+      {
+        let riders : string[] = [];
+        if (result.length > 0) {
+          for (let row = 0; row < result.length; row++) {
+            let r = result[row];
+            riders.push("'"+r.rider+"'")
+          }
+          SendChangeNotificationEmails(ride,riders,response,true,next) ;
+
+        }
+      })
       response.json('OK');
     });
   }

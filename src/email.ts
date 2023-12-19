@@ -73,19 +73,22 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
  }
 
 
- export function SendChangeNotificationEmails(ride: Ride, riders: string[], response: { json: any; }, next: (arg0: { code: any; }) => void)  {
+ export function SendChangeNotificationEmails(ride: Ride, riders: string[], response: { json: any; }, deleted: boolean, next: (arg0: { code: any; }) => void)  {
 
     createTransporter();
     
     let date: string = TimesDates.StrFromIntDays(ride.date);
     let time: string = TimesDates.fromIntTime(ride.time);
-    let body: string = `A ride that you have joined has been changed! :O\n\r   Date/Time: ${date} at ${time}.\n    Decription: ${ride.description}\n\r`;
-    body += "Please visit https://ridehub.truro.cc for details\n\r\n\r";
+    let body: string = `A ride that you have joined has been changed!\n\r   Date/Time: ${date} at ${time}.\n    Decription: ${ride.description}\n\r`;
+    if (deleted)
+     body += 'it has been cancelled, sorry';
+    else
+     body += "Please visit https://ridehub.truro.cc for details\n\r\n\r";
     
     var eMail = {
     from: "rides@truro.cc",
     to: "rides@truro.cc",
-    subject: "TCC Ride : your ride has changed",
+    subject: deleted? "TCC Ride : your ride has been cancelled" : "TCC Ride : your ride has changed",
     text: body,
     bcc: [] as string[]
     // bcc: results

@@ -17,6 +17,11 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
         next(error);
         return;
       }
+      if (results.length === 0) {
+        logUser('** User login: unknown user: ' + user.name + ' email: ' + user.email);
+        response.json(user);
+        return;
+      }
       const checkedUser = results[0];
         // can login with either username or email
       if (checkedUser.name === user.name || checkedUser.email === user.name) {
