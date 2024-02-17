@@ -160,7 +160,7 @@ export function updateRoute(request: { body: { data: Route; }; }, response: { js
  */
 export function shortenRoutes(request: any, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
   
-  let query = `SELECT id,route,miniroute FROM routes`;      
+  let query = `SELECT id,route,dest,miniroute FROM routes`;      
 	dbconnection.query(query,function (error: { code: any; }, results: any[])
     {
       if (error != null) {
@@ -187,7 +187,7 @@ export function shortenRoutes(request: any, response: { json: (arg0: string) => 
         const shortText = gpxTrack.CreateSmallGPX();
 
         var count2 = (shortText.match(/trkpt/g) || []).length /2 ;
-        console.log('Route shortened from '+ count1 + ' to ' + count2 + ' trackpoints');
+        console.log('Route ' + route.dest + ' shortened from '+ count1 + ' to ' + count2 + ' trackpoints');
 
         query = `update routes set miniroute = '${shortText}' where id = ${route.id}`
         dbconnection.query(query,function (error: { code: any; }, results: any)

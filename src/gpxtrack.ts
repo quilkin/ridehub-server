@@ -39,6 +39,11 @@ class Track{
         for (let count = 0; count < pointCount; count += skipPoints) {
             this.trackPntNew.push(this.trackPnt[count]);
         }
+        if (this.root.gpx.trk === undefined) 
+        {
+            console.log('route has no trk section');
+            return '';
+        }
         this.root.gpx.trk.trkseg.trkpt = this.trackPntNew;
         // convert back to XML
         const options = {
@@ -64,6 +69,10 @@ export class GPXTrack extends Track {
 
         this.gpx = this.root.gpx;
         this.track = this.gpx.trk;
+        if (this.track === undefined) {
+            console.log('no track section in file');
+            return;
+        }
         if (this.track.name != undefined)
             this.name = this.track.name;
         if (this.name.length > 30)

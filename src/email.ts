@@ -47,7 +47,7 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
     // get email list from DB
     // todo: ***** send to all roles after testing ****************
    // let sql: string = "SELECT email FROM logins where notifications > 0 and role > 1";
-    let sql: string = "SELECT email FROM logins where notifications > 1";
+    let sql: string = "SELECT email FROM logins where notifications > 0";
     dbconnection.query(sql,function (error: { code: any; }, results: any[])
     {
         if (error != null) {
