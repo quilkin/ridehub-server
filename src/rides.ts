@@ -70,7 +70,7 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
     
     let sql = `update rides set meetingAt = '${ride.meetingAt}', description = '${ride.description}',`;
     sql += ` time = '${ride.time}', groupSize = '${ride.groupSize}', minSpeed = '${ride.minSpeed}', maxSpeed= '${ride.maxSpeed}'`;
-    sql += `, date= '${ride.date}', leaderName='${ride.leaderName}' where rideID = '${ride.rideID}'`;
+    sql += `, date= '${ride.date}', leaderName='${ride.leaderName}', routeID = '${ride.routeID}' where rideID = '${ride.rideID}'`;
 
     dbconnection.query(sql,function (error: { code: any; }, results: { insertId: number; })
     {
