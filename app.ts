@@ -11,8 +11,8 @@ import * as dotenv from "dotenv";
 import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp } from "./src/logins.js";
 import { getRoutesById, getRoutesByDs, getGpx, saveRoute, updateRoute, Tcx2Gpx, shortenRoutes } from "./src/routes.js";
 import { getRidesForDate, saveRide, editRide, deleteRide } from "./src/rides.js";
-import { getParticipants, saveParticipant, leaveParticipant } from "./src/participants.js";
-import { createLogFiles, logError, logUser } from './src/utils/logger.js';
+import { getParticipants, saveParticipant, leaveParticipant, touristTrophy, leaderTrophy } from "./src/participants.js";
+import { createLogFiles, logError, logUser, logAction } from './src/utils/logger.js';
 import { apiMethods } from './src/common/apiMethods.js';
 import { createPool } from './src/dbconn.js'  ;
 
@@ -35,6 +35,9 @@ app.listen(port, () => {
 app.get('/', function (req, res) {
     res.sendFile('index.html',  { root: '../client' })
 });
+
+// only used direct from browser
+app.get("/ShortenRoutes",      shortenRoutes)
 app.get('/logs', function (req, res) {
   res.sendFile('./logs/ridehub.log',  { root: './' })
 })
@@ -57,8 +60,7 @@ app.get('/test', function (req, res) {
 //   recurse();
 // })
 
-// only used direct from browser
-  app.get("/ShortenRoutes",      shortenRoutes)
+
   // rides 
   app.post("/" + apiMethods.getRides,     getRidesForDate)
   app.post("/" + apiMethods.getGpx,       getGpx)
@@ -68,6 +70,8 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.saveRide,     saveRide)
   app.post("/" + apiMethods.editRide,     editRide)
   app.post("/" + apiMethods.deleteRide,   deleteRide)
+  app.post("/" + apiMethods.touristTrophy,touristTrophy)
+  app.post("/" + apiMethods.leaderTrophy, leaderTrophy)
   // routes
   app.post("/" + apiMethods.getRoutesById,getRoutesById)
   app.post("/" + apiMethods.getRoutesByDs,getRoutesByDs)
@@ -83,7 +87,7 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.register,     register)
   app.post("/" + apiMethods.changeAccount,changeAccount)
   app.post("/" + apiMethods.forgotPW,     forgotPW)
-
+  app.post("/" + apiMethods.logAction,    logAction)
   
   const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     let message = err.message.toString();

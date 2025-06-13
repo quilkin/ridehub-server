@@ -21,6 +21,10 @@ export enum apiMethods {
     getLogins = 'GetLogins',
     register = 'Register',
     checkTimeout = 'CheckTimeout',
-    findUser = 'FindUser'
+    findUser = 'FindUser',
+    touristTrophy = 'TouristTrophy',
+    leaderTrophy = 'LeaderTrophy',
+    logAction = 'LogAction'
     
   }
+  

@@ -1,6 +1,6 @@
 import { dbconnection } from './dbconn.js'  ;
 import { Request } from "express"
-import { Participant } from './common/participant.js'
+import { Participant, rideCount } from './common/participant.js'
 import {  logUser } from './utils/logger.js';
 
     //  get comma-separated list of participants for each displayed ride
@@ -100,5 +100,61 @@ import {  logUser } from './utils/logger.js';
               });
           }
         });
+      }
+ 
+      /**
+       * Calculate which participants have done most rides recently
+       * @param fromDate 
+       * @param next 
+       */
 
-    }
+      export function touristTrophy(request: { body: { data: number[]; }; }, response: { json: (arg0: rideCount[]) => void; }, next: (arg0: { code: any; }) => void) {
+        const fromDate : number = request.body.data[0];
+        const toDate : number = request.body.data[1];
+        const trophyTable = [] as rideCount[];
+
+        let query = `SELECT rider,count(rider) as count from rides inner join Participants on Participants.rideID = rides.rideID`;
+        query += ` where date > '${fromDate}' and date < '${toDate}' group by rider order by count(rider) desc`;
+        dbconnection.query(query,function (error: { code: any; } , results: any)
+        {
+          if (error != null) {
+            next(error);
+            return;
+          }
+          for (let row = 0; row < results.length && row < 20; row++) {
+                   
+            let tt = results[row];
+            let rider = tt.rider;
+            let count = tt.count;
+            trophyTable[row] = new rideCount(rider,count);
+          }
+          response.json(trophyTable);
+        });
+      }
+      export function leaderTrophy(request: { body: { data: number[]; }; }, response: { json: (arg0: rideCount[]) => void; }, next: (arg0: { code: any; }) => void) {
+        const fromDate : number = request.body.data[0];
+        const toDate : number = request.body.data[1];
+         const leaderTable = [] as rideCount[];
+
+        let query = `SELECT leaderName,count(leaderName) as count from rides where date > '${fromDate}' and date < '${toDate}'`;
+        query += ` group by leaderName order by count(leaderName) desc`;
+        dbconnection.query(query,function (error: { code: any; } , results: any)
+        {
+          if (error != null) {
+            next(error);
+            return;
+          }
+          for (let row = 0; row < results.length && row < 20; row++) {
+                   
+            let tt = results[row];
+            let rider = tt.leaderName;
+            let count = tt.count;
+            leaderTable[row] = new rideCount(rider,count);
+          }
+          response.json(leaderTable);
+        });
+      }
+/*       SELECT leaderName,count(leaderName) as count from rides
+where date > 20226-365 and date < 20226
+group by leaderName
+order by count(leaderName) desc */

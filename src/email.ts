@@ -29,7 +29,7 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
     createTransporter();
     
     let date: string = TimesDates.StrFromIntDays(ride.date);
-    let body: string = `A new ride has been posted! :)\n\r    Date: ${date}.\n    Decription: ${ride.description}\n\r`;
+    let body: string = `A new ride (or event) has been posted! :)\n\r    Date: ${date}.\n    Decription: ${ride.description}\n\r`;
     body += "Please visit https://ridehub.truro.cc for details\n\r\n\r";
     body += "============================================================================================\n\r";
     body += "If you no longer wish to receive these emails, you can edit your preferences in the RideHub 'Account' page\n\r";
@@ -46,7 +46,7 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
     }
     // get email list from DB
     // todo: ***** send to all roles after testing ****************
-   // let sql: string = "SELECT email FROM logins where notifications > 0 and role > 1";
+    //let sql: string = "SELECT email FROM logins where notifications > 0 and role > 1";
     let sql: string = "SELECT email FROM logins where notifications > 0";
     dbconnection.query(sql,function (error: { code: any; }, results: any[])
     {

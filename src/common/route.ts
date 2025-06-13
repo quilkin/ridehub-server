@@ -5,7 +5,7 @@ export class Route {
     miniroute= '';     // was 'gpxData'
     id = 0;
     climbing = 0;
-    distance= 0;
+    distance= 50;
     owner = '';
     //hasGPX = this.gpxData.length > 0;
     hasGPX = false;

@@ -8,3 +8,12 @@ export class Participant {
     }
     
 }
+export class rideCount {
+    rider : string = '';
+    count : number = 0;
+
+    constructor(rider: string,count: number) {
+        this.rider = rider;
+        this.count = count;
+    }
+}
