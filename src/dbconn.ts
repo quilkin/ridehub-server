@@ -16,6 +16,7 @@ export function createPool(configPath : string) : mysql.Pool{
   console.log('host: ' + process.env.host);
   dbconnection     =    mysql.createPool({
     connectionLimit : 10,
+    waitForConnections: true,
     host: process.env.host,
     user: process.env.user,
     password: process.env.password,

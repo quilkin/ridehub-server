@@ -85,7 +85,33 @@ import {  logUser } from './utils/logger.js';
             next(error);
           else
             if (results.length === 0) {
-              response.json("Error: You are not booked onto this ride.");
+              // trying to remove the riide leader?
+              query = `SELECT leaderName from rides where rideID = '${pp.rideID}' and leaderName = '${pp.rider}'`;
+              dbconnection.query(query,function (error: { code: any; } , results: any[])
+              {
+                if (error != null) 
+                  next(error);
+                else {
+                  if (results.length === 1) {
+                    // remove the ride leader
+                    query = `update rides set leaderName = '(${pp.rider})' where rideID = '${pp.rideID}' and leadername = '${pp.rider}'`
+                    dbconnection.query(query,function (error: { code: any; } , results: any[])
+                    {
+                      if (error != null) 
+                        next(error);
+                      else {
+                        logUser(`Leader ${pp.rider} left ride ${pp.rideID}`);
+                        response.json("OK");
+                      }
+                    });
+
+                  }
+                  if (results.length === 0) {
+                    response.json("Error: You are not booked onto this ride.");
+                  }
+                }
+              });
+              
             }
           else {
               query = `delete from  Participants where  rider = '${pp.rider}' and rideID = '${pp.rideID}'`;

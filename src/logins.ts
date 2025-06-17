@@ -120,21 +120,32 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
         if (error != null) {    next(error); return; }
       });
     }
-    if (user.name !== '') // name has actually been changed 
-    {
-      let sql = `update logins set name= '${user.name}' where id = ${user.id}`;
-      dbconnection.query(sql,function (error: { code: any; }, results: User[])
-      {
-        if (error != null) {    next(error);  return;  }
-      });
-    }
+       
     let sql = `update logins set units = '${user.units}', climbs=${user.climbs}, notifications=${user.notifications} where id = ${user.id}`;
     dbconnection.query(sql,function (error: { code: any; }, results: User[])
     {
       if (error != null) {    next(error); return;   }
     });
+    if (user.name !== '') // name has actually been changed 
+    {
+      let sql = `update logins set name= '${user.name}' where id = ${user.id}`;
+      dbconnection.query(sql,function (error: { code: any; }, results: User[])
+      {
+        if (error != null) { 
+          response.json("Sorry, this username has already been taken");
+            // next(error); 
+             return;  }
+      });
+    };
     logUser('User changed account: ' + user.id );
+    if (user.email !== '') 
+      logUser(`User ${user.id} changed email to ${user.email} `) ;
+    if (user.name !== '') 
+      logUser(`User ${user.id} changed username to ${user.name} `) ;
+    if (user.pw !== '') 
+      logUser(`User ${user.id} changed password `) ;
     response.json("OK");
+
   }
   
   export async function signUp(request: { body: { data: User; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
