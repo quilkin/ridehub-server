@@ -1,3 +1,6 @@
+/**
+ * Person who has signed up for a given ride
+ */
 export class Participant {
     rider : string = '';
     rideID : number = 0;
@@ -8,6 +11,10 @@ export class Participant {
     }
     
 }
+
+/**
+ * Helper class to enable calculation of ride stats
+ */
 export class rideCount {
     rider : string = '';
     count : number = 0;

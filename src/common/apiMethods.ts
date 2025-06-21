@@ -1,6 +1,10 @@
+/**
+ * Helper names so that server and cleint can easily use the name when exchanging data.
+ * Doesn't matter what these strings are as long as they are all different!
+ * I hope tehy are all self-explanatory.
+ */
 export enum apiMethods {
-  // doesn't matter what these strings are as long as they are all different!
-  // (same enum used by client and server)
+
     signup = 'Signup',
     login = 'Login',
     changeAccount = 'ChangeAccount',

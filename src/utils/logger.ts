@@ -13,11 +13,15 @@ export function createLogFiles(path : string) {
   user_file = fs.createWriteStream(path + '/logs/rh-users.log', {flags : 'a'});
 }
 
+function timeStr(): string {
+  return new Date().toLocaleTimeString();
+}
+function dateStr() : string {
+  return new Date().toLocaleDateString();
+}
 export function logError(mess : string) { 
   try {
-    const time = new Date().toLocaleTimeString();
-    const date = new Date().toLocaleDateString();
-    const message = util.format('%s %s: ***** %s',date,time,mess)+ '\n'; 
+    const message = util.format('%s %s: ***** %s',dateStr(),timeStr(),mess)+ '\n'; 
     log_file.write(message);
   }
   catch (e){
@@ -25,9 +29,7 @@ export function logError(mess : string) {
 };
 export function logUser(mess: string) { //
   try {
-    const time = new Date().toLocaleTimeString();
-    const date = new Date().toLocaleDateString();
-    const message = util.format('%s %s: %s',date,time,mess)+ '\n'; 
+    const message = util.format('%s %s: %s',dateStr(),timeStr(),mess)+ '\n'; 
     user_file.write(message);
   }
   catch(e) {
@@ -37,19 +39,10 @@ export function logUser(mess: string) { //
 export function logAction(request: { body: { data: String; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void){
   try {
     const action = request.body.data;
-    const time = new Date().toLocaleTimeString();
-    const date = new Date().toLocaleDateString();
-    const message = util.format('%s %s: %s',date,time,action)+ '\n'; 
+    const message = util.format('%s %s: %s',dateStr(),timeStr(),action)+ '\n'; 
     action_file.write(message);
   }
   catch(e) {
     
   }
 };
-// export function getLogFiles(request: any, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
-
-//   const read_log_file = fs.createReadStream('./logs/ridehub.log');
-//   const data = read_log_file.read();
-//   response = data;
-//   //user_file = fs.createWriteStream(path + '/logs/users.log', {flags : 'a'});
-// }

@@ -1,17 +1,10 @@
-//var mysql = require('mysql');
-
 import mysql  from 'mysql';
 import * as dotenv from "dotenv";
-
-
 export var dbconnection : mysql.Pool;
 
-// export function dbConnection() : mysql.Pool{
-//   console.log('host: ' + process.env.host);
-//   return dbconnection;
-// }
+
 export function createPool(configPath : string) : mysql.Pool{
-  //const configPath =  __dirname+'../.env'
+
   dotenv.config({ path: configPath });
   console.log('host: ' + process.env.host);
   dbconnection     =    mysql.createPool({
@@ -41,21 +34,3 @@ dbconnection.on('connection', function (connection: { on: (arg0: string, arg1: {
 }
 
 
-  // exports.executeQuery=function(query: string,callback: (arg0: null, arg1: { rows: any; }) => void){
-  //   pool.getConnection(function(err: any,connection: { release: () => void; query: (arg0: string, arg1: (err: any, rows: any) => void) => void; on: (arg0: string, arg1: (err: any) => void) => void; }){
-  //       if (err) {
-  //         connection.release();
-  //         throw err;
-  //       }   
-  //       connection.query(query,function(err: any,rows: any){
-  //           connection.release();
-  //           if(!err) {
-  //               callback(null, {rows: rows});
-  //           }           
-  //       });
-  //       connection.on('error', function(err: any) {      
-  //             throw err;
-  //             return;     
-  //       });
-  //   });
-//}

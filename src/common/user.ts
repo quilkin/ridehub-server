@@ -1,33 +1,28 @@
-// // see https://stackoverflow.com/questions/12702548
+export enum Roles
+{
+    None,        // Signed up but not yet authenticated by email
+    Rider,       // normal signed-up rider
+    SiteAdmin,   // allowed to edit others' rides etc
+    FullAdmin      // not yet used
+}
 
-// interface iUser {
-
-//     name: string;
-//     pw: string;
-//     email: string;
-//     code: string;
-//     id: number;
-//     role: number;
-//     units: string ;
-//     climbs: number;
-//     notifications: number;
-//     passwordReset : boolean;
-// }
-
+/**
+ * Details of a logged-in user (who may be a rider)
+ */
 export class User {
 
     public name: string;
     public pw: string;
     public email: string = '';
-    public code: string = '';
-    public id: number = 0;
-    public role: number = User.Roles.None;
-    public units: string = 'k';
-    public climbs: number = 1;
-    public notifications: number = 1;
-    public passwordReset : boolean = false;
-    public messagetime: Date = new Date();   // was messageTime
-    public error : string = '';
+    public code: string = '';               // used for securty when dealing with emails (lost password etc)
+    public id: number = 0;                  // autoincremented by database
+    public role: number = Roles.None;       // see Roles above
+    public units: string = 'k';             // preferred distnce unist (miles or km)
+    public climbs: number = 1;              // not used??
+    public notifications: number = 1;       // if the user wants a notification when a new ride is posted
+    public passwordReset : boolean = false; // true while waiting for a reset
+    public messagetime: Date = new Date();  // was messageTime
+    public error : string = '';             // not used??
 
 
 constructor(name:string, pw: string, email?: string, notify?: number, error?: string) {
@@ -39,20 +34,6 @@ constructor(name:string, pw: string, email?: string, notify?: number, error?: st
 };
 
    
-    /**
-     * Initializes a new instance of the Login class with an error message.
-     * @param error - The error message.
-     */
-    // constructor(error: string) {
-    //     this.id = 0;
-    //     this.name = error;
-    // }
 }
-export namespace User
-{
-    export enum Roles
-    {
-       None,Rider,SiteAmin,FullAdmin
-    }
-}
+
 

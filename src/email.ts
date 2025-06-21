@@ -3,9 +3,7 @@ import { User } from './common/user.js'
 import { TimesDates } from './common/timesdates.js'
 import { dbconnection}  from './dbconn.js'  ;
 import  nodemailer from 'nodemailer';
-import { getHash } from './utils/hash.js'
 import { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
-import { Options } from 'nodemailer/lib/mailer/index.js';
 import { logUser } from './utils/logger.js';
 
 var transporter: nodemailer.Transporter<SentMessageInfo>;
@@ -22,7 +20,7 @@ function createTransporter() {
 }
 
 /***
- * create and send an email about the new ride to all users, unless they opted out
+ * create and send an email about a new ride to all users, unless they opted out
  */
 export function SendNotificationEmails(ride: Ride, response: { json: any; }, next: (arg0: { code: any; }) => void)  {
 
@@ -72,7 +70,9 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
     })
  }
 
-
+/***
+ * create and send an email about a changed ride to all users, unless they opted out
+ */
  export function SendChangeNotificationEmails(ride: Ride, riders: string[], response: { json: any; }, deleted: boolean, next: (arg0: { code: any; }) => void)  {
 
     createTransporter();
@@ -91,10 +91,9 @@ export function SendNotificationEmails(ride: Ride, response: { json: any; }, nex
     subject: deleted? "TCC Ride : your ride has been cancelled" : "TCC Ride : your ride has changed",
     text: body,
     bcc: [] as string[]
-    // bcc: results
+
     }
     // get email list from DB
-    // todo: ***** send to all roles after testing ****************
     let sql: string = `SELECT email FROM logins where notifications > 0  and name in (${riders})`;
     dbconnection.query(sql,function (error: { code: any; }, results: any[])
     {
@@ -125,11 +124,14 @@ export interface eMailMessage {
     "transport": any,
     "email" : any
 }
+
+/**
+ * Create an email to allow new user to register
+  */
 export function CreateRegistationEmail(user: User, hash: string, next: (arg0: { code: any; }) => void) : eMailMessage{
 
    createTransporter();
    
-   //user.code = await getHash(user.name + user.name);
    user.code = hash;
    const urlStr = `${process.env.serviceURL}?user=${user.name}&regcode=${user.code}`;
    const body = `Please click ${urlStr}  to complete your registration\n\r\n\rFor security, this link will expire in 15 minutes!`;
@@ -148,7 +150,6 @@ export function CreatePasswordResetEmail(username: string, email: string, hash: 
 
     createTransporter();
     
-    //const code = await getHash(username + username);
     const urlStr = `${process.env.serviceURL}?pwuser=${username}&regcode=${hash}`;
     const body = `Please click ${urlStr} to reset your password or other details\n\r\n\rFor security, this link will expire in 15 minutes!`;
     
