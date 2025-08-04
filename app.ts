@@ -8,9 +8,9 @@ import type { ErrorRequestHandler } from "express";
 import * as dotenv from "dotenv";
 //import http from 'http';
 
-import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp } from "./src/logins.js";
+import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp, checkMember } from "./src/logins.js";
 import { getRoutesById, getRoutesByDs, getGpx, saveRoute, updateRoute, Tcx2Gpx, shortenRoutes } from "./src/routes.js";
-import { getRidesForDate, saveRide, editRide, deleteRide } from "./src/rides.js";
+import { getRidesForDate, saveRide, editRide, deleteRide, ridecount } from "./src/rides.js";
 import { getParticipants, saveParticipant, leaveParticipant, touristTrophy, leaderTrophy } from "./src/participants.js";
 import { createLogFiles, logError, logUser, logAction } from './src/utils/logger.js';
 import { apiMethods } from './src/common/apiMethods.js';
@@ -38,8 +38,14 @@ app.get('/', function (req, res) {
 
 // only used direct from browser
 app.get("/ShortenRoutes",      shortenRoutes)
-app.get('/logs', function (req, res) {
-  res.sendFile('./logs/ridehub.log',  { root: './' })
+app.get('/actions', function (req, res) {
+  res.sendFile('./logs/rh_action.log',  { root: './' })
+})
+app.get('/errors', function (req, res) {
+  res.sendFile('./logs/rh_error.log',  { root: './' })
+})
+app.get('/users', function (req, res) {
+  res.sendFile('./logs/rh_users.log',  { root: './' })
 })
 app.get('/test', function (req, res) {
     res.send('Ridehub server running!');
@@ -70,6 +76,7 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.saveRide,     saveRide)
   app.post("/" + apiMethods.editRide,     editRide)
   app.post("/" + apiMethods.deleteRide,   deleteRide)
+  app.post("/" + apiMethods.ridecount,   ridecount)
   app.post("/" + apiMethods.touristTrophy,touristTrophy)
   app.post("/" + apiMethods.leaderTrophy, leaderTrophy)
   // routes
@@ -88,6 +95,7 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.changeAccount,changeAccount)
   app.post("/" + apiMethods.forgotPW,     forgotPW)
   app.post("/" + apiMethods.logAction,    logAction)
+   app.post("/" + apiMethods.checkMember,    checkMember)
   
   const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     let message = err.message.toString();

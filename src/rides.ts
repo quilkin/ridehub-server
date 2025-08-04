@@ -4,6 +4,7 @@ import { Ride } from './common/ride.js'
 import { SendNotificationEmails , SendChangeNotificationEmails } from './email.js'
 import {  logUser } from './utils/logger.js';
 import { getParticipantsForRide } from './participants.js'
+import { rideCount } from './common/participant.js';
 
 function GetRidOfApostrophes(data : string): string
 {
@@ -130,3 +131,24 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
     });
   }
 
+  /**
+   * Find number of rides a rider has done
+   * @param request 
+   * @param response 
+   * @param next 
+   */
+
+export function ridecount(request: { body: { data: string; }; }, response: { json: (arg0: rideCount[]) => void; }, next: (arg0: { code: any; }) => void){
+   
+    const username : string = request.body.data;
+    const sql = `SELECT count(rider) as count from rides inner join Participants on Participants.rideID = rides.rideID  where rider = '${username}' group by rider`;
+    dbconnection.query(sql,function (error: { code: any; }, results: rideCount[])
+    {
+      if (error != null) {
+        next(error);
+        
+      }
+      response.json(results);
+    });
+    
+   }

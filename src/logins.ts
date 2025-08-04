@@ -254,3 +254,22 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
       }); // send mail
     }); // query 1
   }
+
+  export function checkMember(request: { body: { data: String; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+
+  const rider = request.body.data;
+  // should return just one member
+  const sql = `SELECT members.number, members.surname from members inner join logins on logins.email = members.email where logins.name ='${rider}'`;
+  dbconnection.query(sql,function (error: { code: any; }, results: any[])
+  {
+      if (error != null) {
+        next(error);
+        return;
+      }
+      if (results.length > 0) {
+        response.json("yes");
+        return;
+      }
+      response.json("no");
+  });
+}

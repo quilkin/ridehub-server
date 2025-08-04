@@ -21,6 +21,7 @@ export enum apiMethods {
     savePpt = 'SaveParticipant',
     leavePpt= 'LeaveParticipant',
     deleteRide = 'DeleteRide',
+    ridecount = 'ridecount',
     tcx2gpx = 'TCX2GPX',
     getLogins = 'GetLogins',
     register = 'Register',
@@ -28,7 +29,8 @@ export enum apiMethods {
     findUser = 'FindUser',
     touristTrophy = 'TouristTrophy',
     leaderTrophy = 'LeaderTrophy',
-    logAction = 'LogAction'
+    logAction = 'LogAction',
+    checkMember = 'checkMember'
     
   }
   

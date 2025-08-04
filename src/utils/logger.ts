@@ -10,7 +10,7 @@ export function createLogFiles(path : string) {
   }
   log_file = fs.createWriteStream(path +'/logs/rh_error.log', {flags : 'a'});
   action_file = fs.createWriteStream(path +'/logs/rh_action.log', {flags : 'a'});
-  user_file = fs.createWriteStream(path + '/logs/rh-users.log', {flags : 'a'});
+  user_file = fs.createWriteStream(path + '/logs/rh_users.log', {flags : 'a'});
 }
 
 function timeStr(): string {
