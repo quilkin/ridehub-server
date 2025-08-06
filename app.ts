@@ -8,7 +8,7 @@ import type { ErrorRequestHandler } from "express";
 import * as dotenv from "dotenv";
 //import http from 'http';
 
-import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp, checkMember } from "./src/logins.js";
+import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp, checkMember, getEmergencyContact } from "./src/logins.js";
 import { getRoutesById, getRoutesByDs, getGpx, saveRoute, updateRoute, Tcx2Gpx, shortenRoutes } from "./src/routes.js";
 import { getRidesForDate, saveRide, editRide, deleteRide, ridecount } from "./src/rides.js";
 import { getParticipants, saveParticipant, leaveParticipant, touristTrophy, leaderTrophy } from "./src/participants.js";
@@ -95,7 +95,8 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.changeAccount,changeAccount)
   app.post("/" + apiMethods.forgotPW,     forgotPW)
   app.post("/" + apiMethods.logAction,    logAction)
-   app.post("/" + apiMethods.checkMember,    checkMember)
+  app.post("/" + apiMethods.checkMember,    checkMember)
+  app.post("/" + apiMethods.getEmergencyContact,    getEmergencyContact)
   
   const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     let message = err.message.toString();

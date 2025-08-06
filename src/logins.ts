@@ -273,3 +273,35 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
       response.json("no");
   });
 }
+
+// helper class for below
+class nok {
+    nextOfKin : string = '';
+    nokPhone : string = '';
+
+    constructor(name: string,phone: string) {
+        this.nextOfKin = name;
+        this.nokPhone = phone;
+    }
+    
+}
+
+export function getEmergencyContact(request: { body: { data: String; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+  const rider = request.body.data;
+  
+  const sql = `SELECT * from members inner join logins on logins.email = members.email where logins.name ='${rider}'`;
+  let noK  = new nok('not yet defined','0700 000000');
+  dbconnection.query(sql,function (error: { code: any; }, results: nok[])
+  {
+      if (error != null) {
+        next(error);
+        return;
+      }
+      if (results.length > 0) {
+        noK = results[0];
+        response.json(noK.nextOfKin + ' ' + noK.nokPhone);
+        return;
+      }
+      response.json("not available");
+  });
+}

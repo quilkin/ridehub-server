@@ -30,7 +30,8 @@ export enum apiMethods {
     touristTrophy = 'TouristTrophy',
     leaderTrophy = 'LeaderTrophy',
     logAction = 'LogAction',
-    checkMember = 'checkMember'
+    checkMember = 'checkMember',
+    getEmergencyContact = 'getEmergencyContact'
     
   }
   
