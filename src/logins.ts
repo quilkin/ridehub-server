@@ -2,16 +2,16 @@ import { createPool, dbconnection } from './dbconn.js'  ;
 import { User } from './common/user.js'
 import { logUser } from './utils/logger.js';
 import { getHash } from './utils/hash.js'
-import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from './email.js'
+import { CreateRegistrationEmail, CreatePasswordResetEmail, eMailMessage} from './email.js'
 
 
-  export async function logIn(request: { body: { data: User; }; }, response: { json: (arg0: User) => void; }, next: (arg0: { code: any; }) => void) {
+  export function logIn(request: { body: { data: User; }; }, response: { json: (arg0: User) => void; }, next: (arg0: any) => void) {
     let user : User = request.body.data;
-    const hash : string = await getHash(user.pw);
+    const hash : string = getHash(user.pw);
     // can login with either username or email
-    let query: string = `SELECT id, name, pw, email, role, units, climbs, notifications FROM logins where name = '${user.name}' or email = '${user.name}'`;
+    let query: string = `SELECT id, name, pw, email, role, units, climbs, notifications FROM logins where name = ? or email = ?`;
 
-    dbconnection.query(query,function (error: { code: any; },  results: User[])
+    dbconnection.query(query, [user.name, user.name], function (error: any,  results: User[])
     {
       if (error != null) {
         next(error);
@@ -38,23 +38,23 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
     });
   }
     
-  export function getLogins(request: any, response: { json: (arg0: User[]) => void; }, next: (arg0: { code: any; }) => void) {
+  export function getLogins(request: any, response: { json: (arg0: User[]) => void; }, next: (arg0: any) => void) {
       let sql = "SELECT id, name, email, notifications FROM logins";
-      dbconnection.query(sql,function (error: { code: any; }, results: User[])
+      dbconnection.query(sql, function (error: any, results: User[])
       {
         if (error != null) {
           next(error);
+          return;
         }
-        else
-            response.json(results);
+        response.json(results);
       });
   }
 
-  export function findUser(request: { body: { data: string; }; }, response: { json: (arg0: User) => void; }, next: (arg0: Error) => void) {
+  export function findUser(request: { body: { data: string; }; }, response: { json: (arg0: User) => void; }, next: (arg0: any) => void) {
     
     let userName : string = request.body.data;
-    let sql = `select *  from logins where name = '${userName}'`;
-    dbconnection.query(sql,function (error: Error | null, results: User[])
+    let sql = `select *  from logins where name = ?`;
+    dbconnection.query(sql, [userName], function (error: any, results: User[])
       {
         if (error != null) {
           next(error);
@@ -80,14 +80,14 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
 
   }
 
-  export async function register(request: { body: { data: User; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+  export function register(request: { body: { data: User; }; }, response: { json: (arg0: string) => void; }, next: (arg0: any) => void) {
 
     let user : User = request.body.data;
-    const hash : string = await getHash(user.name + user.name);
+    const hash : string = getHash(user.name + user.name);
     if (user.code === hash)
     {
-      let sql = `update logins set role = 1 where name = '${user.name}'`;
-      dbconnection.query(sql,function (error: { code: any; }, results: User[])
+      let sql = `update logins set role = 1 where name = ?`;
+      dbconnection.query(sql, [user.name], function (error: any, results: User[])
       {
         if (error != null) {
           next(error);
@@ -100,64 +100,76 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
     }
   }
 
-  export async function changeAccount(request: { body: { data: User; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+  export function changeAccount(request: { body: { data: User; }; }, response: { json: (arg0: string) => void; }, next: (arg0: any) => void) {
 
     const user : User = request.body.data;
-    if (user.pw !== '') // password has actually been changed 
-    {
-      const hash : string = await getHash(user.pw);
-      let sql = `update logins set pw = '${hash}' where id = ${user.id}`;
-      dbconnection.query(sql,function (error: { code: any; }, results: User[])
-      {
-        if (error != null) {    next(error);  return;   }
-      });
-    }
-    if (user.email !== '') // email has actually been changed 
-    {
-      let sql = `update logins set email = '${user.email}' where id = ${user.id}`;
-      dbconnection.query(sql,function (error: { code: any; }, results: User[])
-      {
-        if (error != null) {    next(error); return; }
-      });
-    }
-       
-    let sql = `update logins set units = '${user.units}', climbs=${user.climbs}, notifications=${user.notifications} where id = ${user.id}`;
-    dbconnection.query(sql,function (error: { code: any; }, results: User[])
-    {
-      if (error != null) {    next(error); return;   }
-    });
-    if (user.name !== '') // name has actually been changed 
-    {
-      let sql = `update logins set name= '${user.name}' where id = ${user.id}`;
-      dbconnection.query(sql,function (error: { code: any; }, results: User[])
-      {
-        if (error != null) { 
-          response.json("Sorry, this username has already been taken");
-            // next(error); 
-             return;  }
-      });
+    let updateCount = 0;
+    let errorOccurred = false;
+
+    const sendResponse = () => {
+      updateCount++;
+      if (updateCount === (user.pw ? 1 : 0) + (user.email ? 1 : 0) + 1 + (user.name ? 1 : 0)) {
+        if (!errorOccurred) {
+          logUser('User changed account: ' + user.id);
+          if (user.email !== '')
+            logUser(`User ${user.id} changed email to ${user.email}`);
+          if (user.name !== '')
+            logUser(`User ${user.id} changed username to ${user.name}`);
+          if (user.pw !== '')
+            logUser(`User ${user.id} changed password`);
+          response.json("OK");
+        }
+      }
     };
-    logUser('User changed account: ' + user.id );
-    if (user.email !== '') 
-      logUser(`User ${user.id} changed email to ${user.email} `) ;
-    if (user.name !== '') 
-      logUser(`User ${user.id} changed username to ${user.name} `) ;
-    if (user.pw !== '') 
-      logUser(`User ${user.id} changed password `) ;
-    response.json("OK");
+
+    if (user.pw !== '') {
+      const hash : string = getHash(user.pw);
+      let sql = `update logins set pw = ? where id = ?`;
+      dbconnection.query(sql, [hash, user.id], function (error: any, results: User[]) {
+        if (error != null) { errorOccurred = true; next(error); return; }
+        sendResponse();
+      });
+    }
+    if (user.email !== '') {
+      let sql = `update logins set email = ? where id = ?`;
+      dbconnection.query(sql, [user.email, user.id], function (error: any, results: User[]) {
+        if (error != null) { errorOccurred = true; next(error); return; }
+        sendResponse();
+      });
+    }
+
+    let sql = `update logins set units = ?, climbs = ?, notifications = ? where id = ?`;
+    dbconnection.query(sql, [user.units, user.climbs, user.notifications, user.id], function (error: any, results: User[]) {
+      if (error != null) { errorOccurred = true; next(error); return; }
+      sendResponse();
+    });
+
+    if (user.name !== '') {
+      let sql = `update logins set name = ? where id = ?`;
+      dbconnection.query(sql, [user.name, user.id], function (error: any, results: User[]) {
+        if (error != null) {
+          errorOccurred = true;
+          response.json("Sorry, this username has already been taken");
+          return;
+        }
+        sendResponse();
+      });
+    } else {
+      sendResponse();
+    }
 
   }
   
-  export async function signUp(request: { body: { data: User; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+  export function signUp(request: { body: { data: User; }; }, response: { json: (arg0: string) => void; }, next: (arg0: any) => void) {
 
     const user : User = request.body.data;
     if (user.pw.length < 4 || user.pw.length > 10) {
       response.json("Password must be between 4 and 10 characters");
       return;
     }
-    let pwHash : string = await getHash(user.pw);
+    let pwHash : string = getHash(user.pw);
     let sql =  "SELECT Id, name, pw, email FROM logins";
-    dbconnection.query(sql,async function (error: { code: any; }, users: User[])
+    dbconnection.query(sql, function (error: any, users: User[])
     {
       if (error != null) {    next(error);  return;   }
       //users.forEach ((existingUuser) => {
@@ -173,9 +185,9 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
           return;
         }
       };
-      let userHash = await getHash(user.name + user.name);
+      let userHash = getHash(user.name + user.name);
 
-      const message = CreateRegistationEmail(user,userHash,next);
+      const message = CreateRegistrationEmail(user,userHash,next);
       message.transport.sendMail(message.email, function(error: any, info: any){
         if (error != null) {
             console.log("registration email failed");
@@ -184,11 +196,9 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
         }
         //console.log("email sent ok");
         const now = new Date();
-        
         var pDateSeconds = now.valueOf()/1000;
-        sql =  `insert into logins (name, pw, email,role,messagetime,units,climbs,notifications) values`;
-        sql += ` ('${user.name}','${pwHash}','${user.email}',0,FROM_UNIXTIME('${pDateSeconds}'),'k',1,1)`;
-        dbconnection.query(sql,function (error: { code: any; }, results: User[])
+        sql = `insert into logins (name, pw, email, role, messagetime, units, climbs, notifications) values (?, ?, ?, 0, FROM_UNIXTIME(?), 'k', 1, 1)`;
+        dbconnection.query(sql, [user.name, pwHash, user.email, pDateSeconds], function (error: any, results: User[])
         {
           if (error != null)
           {    
@@ -204,13 +214,13 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
     }); // query 1
   }
 
-  export async function forgotPW(request: { body: { data: string; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+  export function forgotPW(request: { body: { data: string; }; }, response: { json: (arg0: string) => void; }, next: (arg0: any) => void) {
 
     const email = request.body.data;
     
     let username = "";
-    let sql = `SELECT Id, name, email FROM logins where email = '${email}'`
-    dbconnection.query(sql,async function (error: { code: any; }, users: User[])
+    let sql = `SELECT Id, name, email FROM logins where email = ?`;
+    dbconnection.query(sql, [email], function (error: any, users: User[])
     {
       if (error != null)
       {    
@@ -228,7 +238,7 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
       username = users[0].name.trim();
       const now = new Date();
       
-      const code = await getHash(username + username);
+      const code = getHash(username + username);
       const message =  CreatePasswordResetEmail(username,email,code,next);
       message.transport.sendMail(message.email, function(error: any, info: any){
         if (error != null) {
@@ -238,8 +248,8 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
         }
         // save the time this message was sent
         var pDateSeconds = now.valueOf()/1000;
-        sql = `update logins set messagetime = FROM_UNIXTIME('${pDateSeconds}') where email = '${email}'`
-        dbconnection.query(sql,async function (error: { code: any; }, users: User[])
+        sql = `update logins set messagetime = FROM_UNIXTIME(?) where email = ?`;
+        dbconnection.query(sql, [pDateSeconds, email], function (error: any, users: User[])
         {
           if (error != null)
           {    
@@ -255,12 +265,12 @@ import { CreateRegistationEmail, CreatePasswordResetEmail, eMailMessage} from '.
     }); // query 1
   }
 
-  export function checkMember(request: { body: { data: String; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
+  export function checkMember(request: { body: { data: string; }; }, response: { json: (arg0: string) => void; }, next: (arg0: any) => void) {
 
   const rider = request.body.data;
   // should return just one member
-  const sql = `SELECT members.number, members.surname from members inner join logins on logins.email = members.email where logins.name ='${rider}'`;
-  dbconnection.query(sql,function (error: { code: any; }, results: any[])
+  const sql = `SELECT members.number, members.surname from members inner join logins on logins.email = members.email where logins.name = ?`;
+  dbconnection.query(sql, [rider], function (error: any, results: any[])
   {
       if (error != null) {
         next(error);
@@ -288,12 +298,12 @@ class contact {
     
 }
 
-export function getEmergencyContact(request: { body: { data: String; }; }, response: { json: (arg0: string[]) => void; }, next: (arg0: { code: any; }) => void) {
+export function getEmergencyContact(request: { body: { data: string; }; }, response: { json: (arg0: string[]) => void; }, next: (arg0: any) => void) {
   const rider = request.body.data;
   
-  const sql = `SELECT * from members inner join logins on logins.email = members.email where logins.name ='${rider}'`;
-  let details  = new contact('unknown','not yet defined','0000 000000');
-  dbconnection.query(sql,function (error: { code: any; }, results: contact[])
+  const sql = `SELECT * from members inner join logins on logins.email = members.email where logins.name = ?`;
+  let details = new contact('unknown', 'not yet defined', '0000 000000');
+  dbconnection.query(sql, [rider], function (error: any, results: contact[])
   {
       if (error != null) {
         next(error);

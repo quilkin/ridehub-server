@@ -8,35 +8,30 @@ import { rideCount } from './common/participant.js';
 
 function GetRidOfApostrophes(data : string): string
 {
-    return data.replace("'", "''");
+    return data.replace(/'/g, "''");
 }
 
 export function getRidesForDate(request: { body: { data: number; }; }, response: { json: (arg0: Ride[] ) => void; }, next: (arg0: { code: any; }) => void ) {
   const date = request.body.data;
-  const sql = `SELECT * FROM rides where date > ${date-1} and date <= ${date+60} order by date asc`;
+  const sql = `SELECT * FROM rides where date > ? and date <= ? order by date asc`;
 
-
-  dbconnection.query(sql,function (error: { code: any; }, results: Ride[])
+  dbconnection.query(sql, [date - 1, date + 60], function (error: any, results: Ride[])
   {
     if (error != null) {
       next(error);
-
+      return;
     }
-    else
-        response.json(results);
+    response.json(results);
   });
 }
 
-  
- 
 export function saveRide(request: { body: { data: Ride; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
     const ride = request.body.data;
     ride.meetingAt = GetRidOfApostrophes(ride.meetingAt);
     ride.description = GetRidOfApostrophes(ride.description);
 
-     // check for existing rides
-    let sql = `SELECT rideID FROM rides where date= '${ride.date}' and leaderName = '${ride.leaderName}'`
-    dbconnection.query(sql,function (error: { code: any; }, results: string[])
+    const checkSql = `SELECT rideID FROM rides where date = ? and leaderName = ?`;
+    dbconnection.query(checkSql,[ride.date, ride.leaderName], function (error: any, results: any[])
     {
       if (error != null) {
         next(error);
@@ -46,12 +41,12 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
         response.json("There is already a ride with you as leader on the same date. Please choose another date.");
         return;
       }
-      sql = `insert into rides (routeID,leaderName,date,time,meetingAt,description,groupSize,minSpeed,maxSpeed)`;
-      sql += ` values ('${ride.routeID}','${ride.leaderName}','${ride.date}','${ride.time}','${ride.meetingAt}',`;
-      sql += `'${ride.description}','${ride.groupSize}','${ride.minSpeed}','${ride.maxSpeed}')`;
-      // get new ride ID
 
-      dbconnection.query(sql,function (error: { code: any; }, results: { insertId: number; })
+      const insertSql = `insert into rides (routeID,leaderName,date,time,meetingAt,description,groupSize,minSpeed,maxSpeed)`;
+      const insertParams = [ride.routeID, ride.leaderName, ride.date, ride.time, ride.meetingAt, ride.description, ride.groupSize, ride.minSpeed, ride.maxSpeed];
+      const insertQuery = `${insertSql} values (?,?,?,?,?,?,?,?,?)`;
+
+      dbconnection.query(insertQuery, insertParams, function (error: any, results: { insertId: number; })
       {
         if (error != null) {
           next(error);
@@ -59,7 +54,7 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
         }
         ride.rideID = results.insertId;
         logUser(`Ride ${ride.rideID} saved by ${ride.leaderName} `);
-        SendNotificationEmails(ride,response,next) ;
+        SendNotificationEmails(ride,response,next);
       })
     });
   }
@@ -69,65 +64,75 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
     ride.meetingAt = GetRidOfApostrophes(ride.meetingAt);
     ride.description = GetRidOfApostrophes(ride.description);
     
-    let sql = `update rides set meetingAt = '${ride.meetingAt}', description = '${ride.description}',`;
-    sql += ` time = '${ride.time}', groupSize = '${ride.groupSize}', minSpeed = '${ride.minSpeed}', maxSpeed= '${ride.maxSpeed}'`;
-    sql += `, date= '${ride.date}', leaderName='${ride.leaderName}', routeID = '${ride.routeID}' where rideID = '${ride.rideID}'`;
+    const sql = `update rides set meetingAt = ?, description = ?, time = ?, groupSize = ?, minSpeed = ?, maxSpeed = ?, date = ?, leaderName = ?, routeID = ? where rideID = ?`;
+    const params = [ride.meetingAt, ride.description, ride.time, ride.groupSize, ride.minSpeed, ride.maxSpeed, ride.date, ride.leaderName, ride.routeID, ride.rideID];
 
-    dbconnection.query(sql,function (error: { code: any; }, results: { insertId: number; })
+    dbconnection.query(sql, params, function (error: any, results: any)
     {
       if (error != null) {
         next(error);
         return;
       }
       logUser(`Ride ${ride.rideID} edited `);
-      // send change notification to all riders for that ride
-      // only send these if ride has changed date or time
       if (ride.emailRequired) {
-        sql = `SELECT rider FROM Participants where rideID = ${ride.rideID}`;
-        dbconnection.query(sql,function (error: { code: any; } , result: any[])
+        const ridersSql = `SELECT rider FROM Participants where rideID = ?`;
+        dbconnection.query(ridersSql, [ride.rideID], function (error: any , result: any[])
           {
+            if (error != null) {
+              next(error);
+              return;
+            }
+
             let riders : string[] = [];
             for (let row = 0; row < result.length; row++) {
-              let r = result[row];
+              const r = result[row];
               riders.push("'"+r.rider+"'")
             }
-            logUser(`Ride ${ride.rideID} edited by ${ride.leaderName} `);
-            SendChangeNotificationEmails(ride,riders,response,false,next) ;
-            response.json('OK');
+
+            if (riders.length > 0) {
+              logUser(`Ride ${ride.rideID} edited by ${ride.leaderName} `);
+              SendChangeNotificationEmails(ride,riders,response,false,next);
+            } else {
+              response.json('OK');
+            }
           })
       }
-      else
+      else {
         response.json('OK');
+      }
     })
   }
 
-  
-
   export function deleteRide(request: { body: { data: Ride; }; }, response: { json: (arg0: string) => void; }, next: (arg0: { code: any; }) => void) {
     const ride : Ride = request.body.data;
-    let  sql = `delete from rides where rideID = ${ride.rideID}`;
+    const sql = `delete from rides where rideID = ?`;
 
-    dbconnection.query(sql,function (error: { code: any; }, results: string)
+    dbconnection.query(sql, [ride.rideID], function (error: any, results: string)
     {
       if (error != null) {
         next(error);
         return;
       }
       logUser(`Ride ${ride.rideID} deleted`);
-      sql = `SELECT rider FROM Participants where rideID = ${ride.rideID}`;
-      dbconnection.query(sql,function (error: { code: any; } , result: any[])
+      const selectSql = `SELECT rider FROM Participants where rideID = ?`;
+      dbconnection.query(selectSql, [ride.rideID], function (error: any , result: any[])
       {
+        if (error != null) {
+          next(error);
+          return;
+        }
+
         let riders : string[] = [];
         if (result.length > 0) {
           for (let row = 0; row < result.length; row++) {
             let r = result[row];
             riders.push("'"+r.rider+"'")
           }
-          SendChangeNotificationEmails(ride,riders,response,true,next) ;
-
+          SendChangeNotificationEmails(ride,riders,response,true,next);
+        } else {
+          response.json('OK');
         }
       })
-      response.json('OK');
     });
   }
 
@@ -141,14 +146,15 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
 export function ridecount(request: { body: { data: string; }; }, response: { json: (arg0: rideCount[]) => void; }, next: (arg0: { code: any; }) => void){
    
     const username : string = request.body.data;
-    const sql = `SELECT count(rider) as count from rides inner join Participants on Participants.rideID = rides.rideID  where rider = '${username}' group by rider`;
-    dbconnection.query(sql,function (error: { code: any; }, results: rideCount[])
+    const sql = `SELECT rider, count(rider) as count FROM rides inner join Participants on Participants.rideID = rides.rideID  where rider = ? group by rider`;
+    dbconnection.query(sql, [username], function (error: any, results: any[])
     {
       if (error != null) {
         next(error);
-        
+        return;
       }
-      response.json(results);
+      const counts = results.map((row: any) => new rideCount(row.rider, row.count));
+      response.json(counts);
     });
     
    }

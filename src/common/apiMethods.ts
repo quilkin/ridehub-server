@@ -1,7 +1,7 @@
 /**
- * Helper names so that server and cleint can easily use the name when exchanging data.
+ * Helper names so that server and client can easily use the name when exchanging data.
  * Doesn't matter what these strings are as long as they are all different!
- * I hope tehy are all self-explanatory.
+ * I hope they are all self-explanatory.
  */
 export enum apiMethods {
 
@@ -31,7 +31,18 @@ export enum apiMethods {
     leaderTrophy = 'LeaderTrophy',
     logAction = 'LogAction',
     checkMember = 'checkMember',
-    getEmergencyContact = 'getEmergencyContact'
+    getEmergencyContact = 'getEmergencyContact',
+
+    // for membership app
+    getMembers = 'getMembers',  
+    saveMember = 'SaveMember',
+    editMember = 'EditMember',
+    findMember = 'FindMember',
+    findLoginName = 'FindLogin',
+    deleteMember = 'DeleteMember',
+    memberList = 'SendMembershipList',
+    payment = 'Payment',
+    groupEmail = 'GroupEmail'
     
   }
   

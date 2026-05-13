@@ -6,7 +6,7 @@ import sjcl from 'sjcl'
  * @param text usually a  password
  * @returns hashed string
  */
-export async function getHash(text : string)  {
+export function getHash(text : string)  {
     if (text === null || text === undefined || text === "") {
 	    return "";
 	  }

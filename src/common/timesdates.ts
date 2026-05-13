@@ -4,7 +4,7 @@ export class TimesDates  {
     date = new Date();
 
     /**
-     * Adds a leding zero to a number, if necesssary to make it 2 chars wide
+     * Adds a leading zero to a number, if necessary to make it 2 chars wide
      * @param num 
      * @returns double-digit string
      */
@@ -26,7 +26,7 @@ export class TimesDates  {
         // return number of whole days since 01/01/1970
         var value = time.valueOf();
         value /= 86400000;
-        //return parseInt(value.toFixed(0));  
+
         return Math.floor(value);
     }
     static dateString(time : Date | undefined) : string{
@@ -34,7 +34,7 @@ export class TimesDates  {
                 return 'Unknown date';
         }
         // toLocaleTimeString() is no good for different platforms
-        //return [time.getFullYear(), pad2(time.getMonth() + 1), pad2(time.getDate())].join('-');
+
         return time.toDateString();
     }
 

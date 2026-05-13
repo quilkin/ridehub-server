@@ -3,25 +3,28 @@ import bodyParser from "body-parser";
 import methodOverride from "method-override";
 import cors from "cors";
 import type { ErrorRequestHandler } from "express";
-//import path from 'path';
-//import { fileURLToPath } from 'url';
 import * as dotenv from "dotenv";
-//import http from 'http';
+
 
 import { logIn, getLogins, findUser, register, changeAccount, forgotPW, signUp, checkMember, getEmergencyContact } from "./src/logins.js";
-import { getRoutesById, getRoutesByDs, getGpx, saveRoute, updateRoute, Tcx2Gpx, shortenRoutes } from "./src/routes.js";
+import { getRoutesById, getRoutesByDistance, getGpx, saveRoute, updateRoute, Tcx2Gpx, shortenRoutes } from "./src/routes.js";
 import { getRidesForDate, saveRide, editRide, deleteRide, ridecount } from "./src/rides.js";
 import { getParticipants, saveParticipant, leaveParticipant, touristTrophy, leaderTrophy } from "./src/participants.js";
 import { createLogFiles, logError, logUser, logAction } from './src/utils/logger.js';
+import { getMembers, saveMember, editMember, deleteMember, payment, findMember, findLoginName } from "./src/members.js";
+import { sendGroupEmail } from "./src/email.js";
+import { autoMembershipList } from "./src/email.js";
 import { apiMethods } from './src/common/apiMethods.js';
 import { createPool } from './src/dbconn.js'  ;
 
 const app = express ();
-//const httpServer = new http.Server(app);
 const port = process.env.PORT || 3000;
+dotenv.config({ path: './.env' });
+createLogFiles('./');
+createPool('./.env');
+
 app.use(express.json({ limit: '1mb'}));
 app.use(cors());
-// Configuring body parser 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ limit: '1mb',extended: false }));
 
@@ -51,20 +54,6 @@ app.get('/test', function (req, res) {
     res.send('Ridehub server running!');
     logError('Ridehub server running!');
 })
-// app.get('/crashtest1', function (req, res,next) {
-//   res.send('Ridehub server crash test 1');
-//   let err = new Error('crash test');
-//   next(err);
-//   next(err);
-//   next(err);
-// })
-// app.get('/crashtest2', function (req, res,next) {
-//   res.send('Ridehub server crash test 2');
-//   function recurse() {
-//     recurse();
-//   }
-//   recurse();
-// })
 
 
   // rides 
@@ -81,7 +70,7 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.leaderTrophy, leaderTrophy)
   // routes
   app.post("/" + apiMethods.getRoutesById,getRoutesById)
-  app.post("/" + apiMethods.getRoutesByDs,getRoutesByDs)
+  app.post("/" + apiMethods.getRoutesByDs,getRoutesByDistance)
   app.post("/" + apiMethods.saveRoute,    saveRoute)
   app.post("/" + apiMethods.updateRoute,  updateRoute)
   app.post("/" + apiMethods.tcx2gpx,      Tcx2Gpx)
@@ -97,6 +86,17 @@ app.get('/test', function (req, res) {
   app.post("/" + apiMethods.logAction,    logAction)
   app.post("/" + apiMethods.checkMember,    checkMember)
   app.post("/" + apiMethods.getEmergencyContact,    getEmergencyContact)
+
+    // membership
+  app.post("/" + apiMethods.getMembers,     getMembers)
+  app.post("/" + apiMethods.saveMember,     saveMember)
+  app.post("/" + apiMethods.editMember,     editMember)
+  app.post("/" + apiMethods.deleteMember,   deleteMember)
+  app.post("/" + apiMethods.findMember,   findMember)
+  app.post("/" + apiMethods.findLoginName,   findLoginName)
+   app.post("/" + apiMethods.findLoginName,   findLoginName)
+  app.post("/" + apiMethods.payment,   payment)
+  app.post("/" + apiMethods.groupEmail, sendGroupEmail)
   
   const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     let message = err.message.toString();
@@ -113,9 +113,5 @@ app.get('/test', function (req, res) {
   }
 
   app.use(errorHandler);
-
-  createLogFiles('./');
-  createPool('./.env');
-  dotenv.config({ path: './.env' });
+  
   logError("RideHub server listening on PORT: "  + port);
-  //logError("Environment: "  + process.env.NODE_ENV);
