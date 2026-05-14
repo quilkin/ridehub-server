@@ -8,7 +8,8 @@ import { rideCount } from './common/participant.js';
 
 function GetRidOfApostrophes(data : string): string
 {
-    return data.replace(/'/g, "''");
+  //  return data.replace(/'/g, "''");
+  return data;
 }
 
 export function getRidesForDate(request: { body: { data: number; }; }, response: { json: (arg0: Ride[] ) => void; }, next: (arg0: { code: any; }) => void ) {
@@ -42,9 +43,9 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
         return;
       }
 
-      const insertSql = `insert into rides (routeID,leaderName,date,time,meetingAt,description,groupSize,minSpeed,maxSpeed)`;
-      const insertParams = [ride.routeID, ride.leaderName, ride.date, ride.time, ride.meetingAt, ride.description, ride.groupSize, ride.minSpeed, ride.maxSpeed];
-      const insertQuery = `${insertSql} values (?,?,?,?,?,?,?,?,?)`;
+      const insertSql = `insert into rides (routeID,leaderName,date,time,meetingAt,dest,description,groupSize,minSpeed,maxSpeed)`;
+      const insertParams = [ride.routeID, ride.leaderName, ride.date, ride.time, ride.meetingAt, ride.dest, ride.description, ride.groupSize, ride.minSpeed, ride.maxSpeed];
+      const insertQuery = `${insertSql} values (?,?,?,?,?,?,?,?,?,?)`;
 
       dbconnection.query(insertQuery, insertParams, function (error: any, results: { insertId: number; })
       {
@@ -63,9 +64,10 @@ export function saveRide(request: { body: { data: Ride; }; }, response: { json: 
     const ride = request.body.data;
     ride.meetingAt = GetRidOfApostrophes(ride.meetingAt);
     ride.description = GetRidOfApostrophes(ride.description);
-    
-    const sql = `update rides set meetingAt = ?, description = ?, time = ?, groupSize = ?, minSpeed = ?, maxSpeed = ?, date = ?, leaderName = ?, routeID = ? where rideID = ?`;
-    const params = [ride.meetingAt, ride.description, ride.time, ride.groupSize, ride.minSpeed, ride.maxSpeed, ride.date, ride.leaderName, ride.routeID, ride.rideID];
+    ride.dest = GetRidOfApostrophes(ride.dest);
+
+    const sql = `update rides set meetingAt = ?, dest= ?, description = ?, time = ?, groupSize = ?, minSpeed = ?, maxSpeed = ?, date = ?, leaderName = ?, routeID = ? where rideID = ?`;
+    const params = [ride.meetingAt, ride.dest, ride.description, ride.time, ride.groupSize, ride.minSpeed, ride.maxSpeed, ride.date, ride.leaderName, ride.routeID, ride.rideID];
 
     dbconnection.query(sql, params, function (error: any, results: any)
     {

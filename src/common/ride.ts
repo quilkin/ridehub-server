@@ -6,6 +6,7 @@ import  { TimesDates }  from './timesdates'
 export class Ride {
     leaderName = '';
     routeID = 0;
+    dest = '';
     date = TimesDates.toIntDays(new Date());
     rideID = 0;             // will be autoincrented by the database
     time = 540;             // times stored as minutes. Default start time is 9 am
