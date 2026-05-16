@@ -16,6 +16,7 @@ import { sendGroupEmail } from "./src/email.js";
 import { autoMembershipList } from "./src/email.js";
 import { apiMethods } from './src/common/apiMethods.js';
 import { createPool } from './src/dbconn.js'  ;
+import path from "path/win32";
 
 const app = express ();
 const port = process.env.PORT || 3000;
@@ -29,7 +30,19 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ limit: '1mb',extended: false }));
 
 app.use(methodOverride());
-app.use(express.static('../client'));
+
+app.get('/api/hello', (req, res) => {
+    res.json({ message: 'Hello from shared TCC service' });
+});
+
+app.use('/membership', express.static('membership-client'));
+// serve built client assets at /assets so absolute paths in index.html resolve
+app.use('/assets', express.static('membership-client/assets'));
+
+app.use('/ridehub', express.static('ridehub-client'));
+// serve built client assets at /assets so absolute paths in index.html resolve
+app.use('/assets', express.static('ridehub-client/assets'));
+
 
 app.listen(port, () => {
     console.log("RideHub server listening on PORT:", port);
